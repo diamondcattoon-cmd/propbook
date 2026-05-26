@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PropBook</title>
+<meta name="theme-color" content="#12153D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PropBook">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#12153D;--navy2:#1C2154;--navy3:#252B6B;
+  --gold:#C9922A;--goldL:#F5E6C8;--goldD:#A5751E;
+  --cream:#F7F4EE;--cream2:#EDE9E0;
+  --white:#FFFFFF;
+  --text:#12153D;--textS:#5C6080;--textH:#9499BB;
+  --red:#D94040;--redL:#FDEAEA;
+  --green:#1E7A4E;--greenL:#E3F5EC;
+  --blue:#1D5BB5;--blueL:#E4EDFA;
+  --amber:#B86E00;--amberL:#FEF3DC;
+  --radius:16px;--radiusSm:10px;--radiusXs:6px;
+  --shadow:0 2px 16px rgba(18,21,61,0.08);
+  --shadowMd:0 6px 32px rgba(18,21,61,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;padding-bottom:82px}
+.topbar{background:var(--navy);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo-wrap{display:flex;flex-direction:column}
+.logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:-.3px;line-height:1}
+.logo span{color:var(--gold)}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.8px;text-transform:uppercase;margin-top:2px}
+.topbar-actions{display:flex;gap:6px}
+.topbar-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:#fff;padding:7px 11px;font-size:16px;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit;font-size:12px;font-weight:600}
+.topbar-btn:active{background:rgba(255,255,255,.2)}
+.back-btn{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:6px;font-size:14px;font-family:inherit;font-weight:500;padding:0}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:11px 0 9px;gap:4px;cursor:pointer;border:none;background:none;color:rgba(255,255,255,.4);transition:color .2s;position:relative}
+.nav-item.active{color:#fff}
+.nav-item.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:32px;height:2px;background:var(--gold);border-radius:0 0 3px 3px}
+.nav-item svg{width:22px;height:22px;stroke-width:1.8}
+.nav-item span{font-size:10px;font-weight:600;letter-spacing:.3px}
+.view{display:none;padding:16px;animation:slideUp .25s ease}
+.view.active{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.dash-greeting{margin:4px 0 20px}
+.dash-greeting .day{font-size:12px;color:var(--textS);letter-spacing:.3px;text-transform:uppercase;margin-bottom:2px}
+.dash-greeting .title{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--navy);line-height:1.2}
+.ring-card{background:var(--navy);border-radius:var(--radius);padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:20px;box-shadow:var(--shadowMd)}
+.ring-wrap{position:relative;width:90px;height:90px;flex-shrink:0}
+.ring-svg{width:90px;height:90px;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.12);stroke-width:8}
+.ring-fill{fill:none;stroke:var(--gold);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-num{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#fff;line-height:1}
+.ring-label{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+.ring-stats{flex:1;display:flex;flex-direction:column;gap:8px}
+.ring-stat-row{display:flex;align-items:center;justify-content:space-between}
+.ring-stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:8px}
+.ring-stat-name{font-size:12px;color:rgba(255,255,255,.6);flex:1}
+.ring-stat-val{font-size:14px;font-weight:700;color:#fff}
+.ring-stat-bar-wrap{width:60px;height:4px;background:rgba(255,255,255,.12);border-radius:2px;margin:0 10px}
+.ring-stat-bar{height:100%;border-radius:2px;transition:width .8s ease}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title{font-size:15px;font-weight:700;color:var(--navy)}
+.sec-link{font-size:12px;color:var(--gold);font-weight:600;cursor:pointer}
+.chips-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none}
+.chips-row::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;background:var(--white);border:1.5px solid var(--cream2);border-radius:24px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;color:var(--textS)}
+.chip:active{transform:scale(.96)}
+.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.prop-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.prop-card:active{transform:scale(.985);box-shadow:0 1px 8px rgba(18,21,61,.06)}
+.card-img{width:100%;height:176px;position:relative;overflow:hidden;background:var(--cream2)}
+.card-img img,.card-img video{width:100%;height:100%;object-fit:cover}
+.card-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px}
+.card-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(18,21,61,.55) 0%,transparent 50%)}
+.card-price-overlay{position:absolute;bottom:12px;left:14px;color:#fff}
+.card-price-overlay .price-main{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1}
+.card-price-overlay .price-unit{font-size:11px;opacity:.8;font-weight:500}
+.card-img-badges{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.status-pill{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.3px;text-transform:uppercase}
+.sp-available{background:var(--green);color:#fff}
+.sp-negotiating{background:var(--amber);color:#fff}
+.sp-sold{background:var(--red);color:#fff}
+.sp-rented{background:var(--blue);color:#fff}
+.media-count-pill{background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+.type-pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.tp-zameen{background:var(--greenL);color:var(--green)}
+.tp-flat{background:var(--blueL);color:var(--blue)}
+.tp-makaan{background:#FEF3DC;color:#B86E00}
+.tp-commercial{background:#F3ECFF;color:#6B21A8}
+.tp-khet{background:var(--greenL);color:var(--green)}
+.tp-plot{background:#FFF0E4;color:#C05621}
+.card-body{padding:12px 14px 14px}
+.card-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px;line-height:1.3}
+.card-loc{font-size:13px;color:var(--textS);display:flex;align-items:center;gap:4px;margin-bottom:10px}
+.card-meta-row{display:flex;align-items:center;justify-content:space-between}
+.card-owner{display:flex;align-items:center;gap:6px}
+.owner-avatar{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.owner-name{font-size:12px;color:var(--textS);font-weight:500}
+.card-area{font-size:12px;color:var(--textH);background:var(--cream);padding:4px 10px;border-radius:var(--radiusXs);font-weight:600}
+.search-wrap{display:flex;gap:10px;margin-bottom:14px}
+.search-box{flex:1;position:relative}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--textH);pointer-events:none}
+.search-icon svg{width:16px;height:16px}
+.search-input{width:100%;background:var(--white);border:1.5px solid var(--cream2);border-radius:var(--radiusSm);padding:11px 12px 11px 36px;font-size:14px;font-family:inherit;outline:none;color:var(--text);transition:border-color .15s}
+.search-input:focus{border-color:var(--navy)}
+.filter-btn{background:var(--white);border:1.5px solid var(--cream2);border-radius:var(--radiusSm);padding:11px 14px;cursor:pointer;color:var(--textS);transition:all .15s;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;font-family:inherit}
+.form-section{background:var(--white);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.fs-head{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--goldL)}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--textS);margin-bottom:6px;display:block;letter-spacing:.2px}
+.form-control{width:100%;background:var(--cream);border:1.5px solid transparent;border-radius:var(--radiusSm);padding:12px 14px;font-size:14px;font-family:inherit;outline:none;transition:all .15s;color:var(--text)}
+.form-control:focus{border-color:var(--navy);background:var(--white)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+select.form-control{cursor:pointer}
+textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.type-opt{border:2px solid var(--cream2);border-radius:var(--radiusSm);padding:12px 6px;text-align:center;cursor:pointer;transition:all .15s;background:var(--white)}
+.type-opt:active{transform:scale(.95)}
+.type-opt.selected{border-color:var(--navy);background:var(--navy)}
+.type-opt .t-emoji{font-size:24px;margin-bottom:4px}
+.type-opt .t-name{font-size:12px;font-weight:700;color:var(--textS);letter-spacing:.2px}
+.type-opt.selected .t-name{color:var(--gold)}
+.media-tabs{display:flex;background:var(--cream);border-radius:var(--radiusSm);padding:3px;margin-bottom:14px;gap:2px}
+.media-tab{flex:1;padding:9px 4px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--textS);border:none;border-radius:7px;transition:all .15s;font-family:inherit;letter-spacing:.2px}
+.media-tab.active{background:var(--navy);color:#fff}
+.upload-zone{border:2px dashed var(--cream2);border-radius:var(--radius);padding:24px 16px;text-align:center;cursor:pointer;transition:all .15s}
+.upload-zone:hover,.upload-zone:active{border-color:var(--navy);background:var(--cream)}
+.upload-zone .uz-icon{font-size:36px;margin-bottom:8px}
+.upload-zone p{font-size:13px;color:var(--textS);line-height:1.6}
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.media-item{position:relative;aspect-ratio:1;border-radius:var(--radiusSm);overflow:hidden;background:var(--cream2)}
+.media-item img,.media-item video{width:100%;height:100%;object-fit:cover}
+.media-del{position:absolute;top:4px;right:4px;background:rgba(18,21,61,.7);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+.media-type-tag{position:absolute;bottom:4px;left:4px;background:rgba(18,21,61,.65);color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;letter-spacing:.3px}
+.yt-box{background:var(--cream);border-radius:var(--radiusSm);padding:14px}
+.yt-note{font-size:12px;color:var(--textS);margin-bottom:12px;line-height:1.6;padding:8px 10px;background:#FFF8E1;border-left:3px solid var(--gold);border-radius:0 6px 6px 0}
+.yt-preview{width:100%;aspect-ratio:16/9;border-radius:var(--radiusSm);overflow:hidden;margin-top:10px;display:none}
+.yt-preview iframe{width:100%;height:100%;border:none}
+.media-count-label{font-size:12px;color:var(--textH);text-align:center;margin-top:8px}
+.btn{display:block;width:100%;padding:15px;border-radius:var(--radiusSm);font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;letter-spacing:.2px}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-secondary{background:var(--cream);color:var(--text)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-sm{padding:10px 18px;font-size:13px;width:auto;display:inline-block;border-radius:var(--radiusSm)}
+.detail-gallery{overflow-x:auto;display:flex;gap:10px;margin-bottom:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.detail-gallery::-webkit-scrollbar{display:none}
+.gallery-slide{flex-shrink:0;width:280px;height:210px;border-radius:var(--radius);overflow:hidden;background:var(--cream2);display:flex;align-items:center;justify-content:center;font-size:52px;position:relative}
+.gallery-slide img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+.gallery-slide video{width:100%;height:100%;object-fit:cover}
+.gallery-slide.full{width:calc(100vw - 32px)}
+.yt-tap-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.yt-play{width:56px;height:56px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.detail-card{background:var(--white);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.detail-price{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--navy);margin:6px 0}
+.detail-title{font-size:19px;font-weight:700;color:var(--navy);margin-bottom:4px;line-height:1.3}
+.detail-loc{font-size:13px;color:var(--textS);margin-bottom:6px}
+.detail-date{font-size:11px;color:var(--textH);font-weight:500}
+.info-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--cream2);align-items:flex-start;gap:8px}
+.info-row:last-child{border-bottom:none}
+.info-key{font-size:13px;color:var(--textS);font-weight:500}
+.info-val{font-size:13px;font-weight:700;color:var(--navy);text-align:right;max-width:60%}
+.contact-block{background:var(--white);border-radius:var(--radius);padding:18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.contact-block-title{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px}
+.contact-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radiusSm);margin-bottom:8px}
+.contact-row:last-child{margin-bottom:0}
+.cr-owner{background:var(--navy)}
+.cr-ref{background:var(--goldL)}
+.contact-left{display:flex;align-items:center;gap:10px}
+.contact-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.ca-owner{background:rgba(255,255,255,.15);color:#fff}
+.ca-ref{background:rgba(201,146,42,.2);color:var(--goldD)}
+.contact-info .role{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+.ri-owner{color:rgba(255,255,255,.5)}
+.ri-ref{color:var(--goldD)}
+.contact-info .name{font-size:14px;font-weight:700}
+.ni-owner{color:#fff}
+.ni-ref{color:var(--navy)}
+.contact-info .phone{font-size:12px;margin-top:1px}
+.pi-owner{color:rgba(255,255,255,.6)}
+.pi-ref{color:var(--textS)}
+.call-circle{width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:transform .12s;flex-shrink:0}
+.call-circle:active{transform:scale(.92)}
+.cc-owner{background:rgba(255,255,255,.15)}
+.cc-ref{background:rgba(201,146,42,.2)}
+.action-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.action-btn{padding:13px 6px;border:none;border-radius:var(--radiusSm);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:5px;transition:transform .12s;letter-spacing:.3px;text-transform:uppercase}
+.action-btn:active{transform:scale(.94)}
+.action-btn svg{width:22px;height:22px;stroke-width:1.8}
+.ab-edit{background:var(--cream);color:var(--navy)}
+.ab-share{background:var(--navy);color:#fff}
+.ab-del{background:var(--redL);color:var(--red)}
+.fab{position:fixed;bottom:96px;right:18px;background:var(--gold);color:#fff;border:none;border-radius:50%;width:58px;height:58px;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(201,146,42,.45);z-index:99;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+.fab:active{transform:scale(.91)}
+.toast{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 22px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;letter-spacing:.2px;max-width:92vw;text-align:center}
+.toast.show{opacity:1}
+.modal-overlay{position:fixed;inset:0;background:rgba(18,21,61,.55);z-index:200;display:none;align-items:flex-end}
+.modal-overlay.show{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--white);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-height:88vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;background:var(--cream2);border-radius:2px;margin:0 auto 20px}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--textS);margin-bottom:20px}
+.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.share-opt{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:12px 4px;border-radius:var(--radiusSm);border:1.5px solid var(--cream2);background:var(--white);transition:all .15s;font-family:inherit}
+.share-opt:active{transform:scale(.93)}
+.s-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.s-label{font-size:11px;font-weight:700;color:var(--textS);letter-spacing:.2px}
+.preview-box{background:var(--cream);border-radius:var(--radiusSm);padding:14px;font-size:12px;line-height:1.8;color:var(--textS);margin-bottom:16px;white-space:pre-wrap;max-height:160px;overflow-y:auto;border-left:3px solid var(--navy)}
+.filter-modal-btn{width:100%;padding:14px;border-radius:var(--radiusSm);font-size:15px;font-weight:700;border:none;cursor:pointer;margin-bottom:8px;font-family:inherit;transition:all .15s}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center}
+.lightbox.show{display:flex;animation:fadeIn .2s ease}
+.lightbox-img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px}
+.lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lightbox-count{position:absolute;top:18px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
+.empty{text-align:center;padding:48px 24px}
+.empty-icon{font-size:52px;margin-bottom:14px;opacity:.6}
+.empty h3{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.empty p{font-size:14px;color:var(--textS);margin-bottom:22px;line-height:1.6}
+.video-note{background:#FFF8E1;border-left:3px solid var(--gold);border-radius:0 var(--radiusSm) var(--radiusSm) 0;padding:10px 12px;font-size:12px;color:var(--amber);margin-bottom:12px;line-height:1.6}
+.lang-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.lang-opt{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:var(--radiusSm);border:1.5px solid var(--cream2);background:var(--white);cursor:pointer;transition:all .15s;font-family:inherit;width:100%;text-align:left}
+.lang-opt.active{border-color:var(--navy);background:var(--navy)}
+.lang-left{display:flex;align-items:center;gap:10px}
+.lang-flag{font-size:22px;line-height:1}
+.lang-native{font-size:15px;font-weight:700;color:var(--navy)}
+.lang-opt.active .lang-native{color:#fff}
+.lang-en-name{font-size:12px;color:var(--textS)}
+.lang-opt.active .lang-en-name{color:rgba(255,255,255,.65)}
+.lang-check{color:var(--gold);font-size:18px;display:none;margin-left:8px}
+.lang-opt.active .lang-check{display:block}
+
+/* ===== AUTH / CONFIG SCREENS ===== */
+.auth-screen{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;z-index:1000;animation:fadeIn .3s ease}
+.auth-screen.hidden{display:none}
+.auth-logo{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-.5px}
+.auth-logo span{color:var(--gold)}
+.auth-tagline{font-size:13px;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;margin-bottom:48px}
+.auth-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:28px 24px;width:100%;max-width:380px}
+.auth-card-title{font-family:'Playfair Display',serif;font-size:22px;color:#fff;margin-bottom:6px;font-weight:600}
+.auth-card-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.6}
+.auth-input{width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:14px 16px;font-size:15px;font-family:inherit;color:#fff;outline:none;transition:border-color .15s;margin-bottom:12px}
+.auth-input:focus{border-color:var(--gold)}
+.auth-input::placeholder{color:rgba(255,255,255,.3)}
+.auth-btn{width:100%;padding:15px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s;background:var(--gold);color:#fff;margin-bottom:10px}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-btn:active:not(:disabled){transform:scale(.98)}
+.auth-btn-secondary{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.12)}
+.auth-divider span{font-size:12px;color:rgba(255,255,255,.3)}
+.auth-success{text-align:center;padding:10px 0}
+.auth-success .success-icon{font-size:48px;margin-bottom:12px}
+.auth-success p{font-size:14px;color:rgba(255,255,255,.7);line-height:1.7}
+.auth-success b{color:#fff}
+.auth-small{font-size:12px;color:rgba(255,255,255,.35);text-align:center;margin-top:14px;line-height:1.7;cursor:pointer;text-decoration:underline}
+.config-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.config-step-num{width:26px;height:26px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.config-step-text{font-size:13px;color:rgba(255,255,255,.65);line-height:1.6}
+.config-step-text b{color:#fff}
+.config-step-text a{color:var(--gold);text-decoration:none}
+.upload-progress{background:rgba(255,255,255,.08);border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:rgba(255,255,255,.7)}
+.upload-bar-wrap{height:4px;background:rgba(255,255,255,.12);border-radius:2px;margin-top:8px;overflow:hidden}
+.upload-bar{height:100%;background:var(--gold);border-radius:2px;transition:width .3s ease;width:0%}
+.sync-badge{background:var(--greenL);color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
+.offline-badge{background:var(--amberL);color:var(--amber);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
+/* ===== PIN LOCK ===== */
+.pin-title{font-size:16px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.3px;margin-bottom:6px;text-align:center}
+.pin-dots{display:flex;gap:18px;justify-content:center;margin:24px 0 32px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.25);transition:all .15s}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);transform:scale(1.15)}
+.pin-dot.error{background:var(--red);border-color:var(--red)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:270px;margin:0 auto}
+.pin-key{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);border-radius:50%;width:74px;height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;color:#fff;font-family:inherit;margin:0 auto;user-select:none}
+.pin-key .pk-num{font-size:26px;font-weight:600;line-height:1}
+.pin-key .pk-sub{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.3);margin-top:2px;text-transform:uppercase}
+.pin-key:active{background:rgba(201,146,42,.25);border-color:var(--gold);transform:scale(.93)}
+.pin-key.pin-del{font-size:22px;background:transparent;border-color:transparent;color:rgba(255,255,255,.45)}
+.pin-key.pin-empty{background:transparent;border:none;cursor:default;pointer-events:none}
+.pin-msg{font-size:13px;color:rgba(255,255,255,.4);text-align:center;min-height:20px;margin-bottom:16px}
+.pin-msg.error{color:var(--red)}
+@keyframes pinShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.pin-shake{animation:pinShake .35s ease}
+</style>
+</head>
+<body>
+
+<!-- ===== SUPABASE CONFIG SCREEN ===== -->
+<div class="auth-screen" id="screen-config">
+  <div class="auth-logo">Prop<span>Book</span></div>
+  <div class="auth-tagline">Cloud Setup</div>
+  <div class="auth-card" style="max-height:80vh;overflow-y:auto">
+    <div class="auth-card-title">☁️ Connect to Cloud</div>
+    <div class="auth-card-sub">Connect PropBook to Supabase to save your data online. One-time setup.</div>
+    <div class="config-step">
+      <div class="config-step-num">1</div>
+      <div class="config-step-text">Go to <a href="https://supabase.com" target="_blank"><b>supabase.com</b></a> → Create free account → New project</div>
+    </div>
+    <div class="config-step">
+      <div class="config-step-num">2</div>
+      <div class="config-step-text">Run the SQL schema from <b>PropBook_Setup_Guide.md</b> in the SQL Editor</div>
+    </div>
+    <div class="config-step">
+      <div class="config-step-num">3</div>
+      <div class="config-step-text">Go to <b>Project Settings → API</b> and copy the keys below</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="color:rgba(255,255,255,.5)">Project URL</label>
+      <input class="auth-input" id="cfg-url" placeholder="https://xxxx.supabase.co" type="url">
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="color:rgba(255,255,255,.5)">Anon / Public Key</label>
+      <input class="auth-input" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);margin:16px 0 16px;padding-top:16px">
+      <div class="auth-card-title" style="font-size:16px;margin-bottom:4px">📷 Cloudinary (Photos & Videos)</div>
+      <div class="auth-card-sub" style="margin-bottom:12px">Free 25GB storage. <a href="https://cloudinary.com" target="_blank" style="color:var(--gold)">cloudinary.com</a> → Sign up → Settings → API Keys</div>
+      <div class="form-group">
+        <label class="form-label" style="color:rgba(255,255,255,.5)">Cloud Name</label>
+        <input class="auth-input" id="cfg-cld-name" placeholder="your-cloud-name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="color:rgba(255,255,255,.5)">Upload Preset (unsigned)</label>
+        <input class="auth-input" id="cfg-cld-preset" placeholder="propbook_upload">
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.1);margin:0 0 16px;padding-top:16px">
+      <div class="auth-card-title" style="font-size:16px;margin-bottom:4px">👤 Your Agent Profile</div>
+      <div class="auth-card-sub" style="margin-bottom:12px">Yeh details share message mein dikhegi — buyers aapko contact karenge</div>
+      <div class="form-group">
+        <label class="form-label" style="color:rgba(255,255,255,.5)">Your Name *</label>
+        <input class="auth-input" id="cfg-agent-name" placeholder="Aapka naam">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="color:rgba(255,255,255,.5)">Your Phone *</label>
+        <input class="auth-input" id="cfg-agent-phone" placeholder="9876543210" type="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="color:rgba(255,255,255,.5)">Your WhatsApp (optional)</label>
+        <input class="auth-input" id="cfg-agent-wa" placeholder="9876543210 (if different)" type="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="color:rgba(255,255,255,.5)">Agency / Company Name (optional)</label>
+        <input class="auth-input" id="cfg-agent-company" placeholder="ABC Real Estate">
+      </div>
+    </div>
+    <button class="auth-btn" id="cfg-save-btn" onclick="saveConfig()">Connect PropBook ☁️</button>
+    <div class="auth-small" onclick="useDemoMode()">⚡ Try Demo Mode (data on this device only)</div>
+  </div>
+</div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="auth-screen hidden" id="screen-login">
+  <div class="auth-logo">Prop<span>Book</span></div>
+  <div class="auth-tagline">Property Manager</div>
+  <div class="auth-card">
+    <div id="login-form-wrap">
+      <div class="auth-card-title">Welcome Back 👋</div>
+      <div class="auth-card-sub">Enter your email to receive a login link. No password needed.</div>
+      <input class="auth-input" id="login-email" placeholder="your@email.com" type="email">
+      <button class="auth-btn" id="login-btn" onclick="sendLoginLink()">📧 Send Login Link</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="auth-btn auth-btn-secondary" onclick="showConfigScreen()">⚙️ Change Settings</button>
+    </div>
+    <div class="auth-success" id="login-success" style="display:none">
+      <div class="success-icon">📬</div>
+      <p>Login link sent to<br><b id="login-email-sent"></b></p>
+      <p style="margin-top:12px;font-size:12px">Check your inbox (and spam folder).<br>Click the link to sign in.</p>
+      <button class="auth-btn" style="margin-top:20px" onclick="document.getElementById('login-success').style.display='none';document.getElementById('login-form-wrap').style.display='block'">Try Again</button>
+    </div>
+  </div>
+  <div style="font-size:12px;color:rgba(255,255,255,.2);margin-top:20px;text-align:center">PropBook v4 · Cloud Edition</div>
+</div>
+
+<!-- ===== LOADING SCREEN ===== -->
+<div class="auth-screen hidden" id="screen-loading">
+  <div class="auth-logo">Prop<span>Book</span></div>
+  <div class="auth-tagline">Loading your data...</div>
+  <div style="margin-top:32px">
+    <div style="width:48px;height:48px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto"></div>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- ===== PIN ENTRY SCREEN ===== -->
+<div class="auth-screen hidden" id="screen-pin">
+  <div class="auth-logo">Prop<span>Book</span></div>
+  <div class="auth-tagline" id="pin-tagline">PIN Lock</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-msg" id="pin-msg">Enter your 4-digit PIN</div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinPress('1')"><span class="pk-num">1</span></button>
+    <button class="pin-key" onclick="pinPress('2')"><span class="pk-num">2</span><span class="pk-sub">ABC</span></button>
+    <button class="pin-key" onclick="pinPress('3')"><span class="pk-num">3</span><span class="pk-sub">DEF</span></button>
+    <button class="pin-key" onclick="pinPress('4')"><span class="pk-num">4</span><span class="pk-sub">GHI</span></button>
+    <button class="pin-key" onclick="pinPress('5')"><span class="pk-num">5</span><span class="pk-sub">JKL</span></button>
+    <button class="pin-key" onclick="pinPress('6')"><span class="pk-num">6</span><span class="pk-sub">MNO</span></button>
+    <button class="pin-key" onclick="pinPress('7')"><span class="pk-num">7</span><span class="pk-sub">PQRS</span></button>
+    <button class="pin-key" onclick="pinPress('8')"><span class="pk-num">8</span><span class="pk-sub">TUV</span></button>
+    <button class="pin-key" onclick="pinPress('9')"><span class="pk-num">9</span><span class="pk-sub">WXYZ</span></button>
+    <button class="pin-key pin-empty"></button>
+    <button class="pin-key" onclick="pinPress('0')"><span class="pk-num">0</span></button>
+    <button class="pin-key pin-del" onclick="pinBackspace()">⌫</button>
+  </div>
+  <div class="auth-small" id="pin-reset-link" onclick="pinForgot()" style="margin-top:28px">Forgot PIN? Sign out &amp; reset</div>
+</div>
+
+<!-- ===== PIN SETUP SCREEN ===== -->
+<div class="auth-screen hidden" id="screen-pin-setup">
+  <div class="auth-logo">Prop<span>Book</span></div>
+  <div class="auth-tagline" id="pin-setup-tagline">Secure Your App</div>
+  <div class="pin-dots" id="pin-setup-dots">
+    <div class="pin-dot" id="psd0"></div>
+    <div class="pin-dot" id="psd1"></div>
+    <div class="pin-dot" id="psd2"></div>
+    <div class="pin-dot" id="psd3"></div>
+  </div>
+  <div class="pin-msg" id="pin-setup-msg">Choose a 4-digit PIN to protect your app</div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinSetupPress('1')"><span class="pk-num">1</span></button>
+    <button class="pin-key" onclick="pinSetupPress('2')"><span class="pk-num">2</span><span class="pk-sub">ABC</span></button>
+    <button class="pin-key" onclick="pinSetupPress('3')"><span class="pk-num">3</span><span class="pk-sub">DEF</span></button>
+    <button class="pin-key" onclick="pinSetupPress('4')"><span class="pk-num">4</span><span class="pk-sub">GHI</span></button>
+    <button class="pin-key" onclick="pinSetupPress('5')"><span class="pk-num">5</span><span class="pk-sub">JKL</span></button>
+    <button class="pin-key" onclick="pinSetupPress('6')"><span class="pk-num">6</span><span class="pk-sub">MNO</span></button>
+    <button class="pin-key" onclick="pinSetupPress('7')"><span class="pk-num">7</span><span class="pk-sub">PQRS</span></button>
+    <button class="pin-key" onclick="pinSetupPress('8')"><span class="pk-num">8</span><span class="pk-sub">TUV</span></button>
+    <button class="pin-key" onclick="pinSetupPress('9')"><span class="pk-num">9</span><span class="pk-sub">WXYZ</span></button>
+    <button class="pin-key pin-empty"></button>
+    <button class="pin-key" onclick="pinSetupPress('0')"><span class="pk-num">0</span></button>
+    <button class="pin-key pin-del" onclick="pinSetupBackspace()">⌫</button>
+  </div>
+  <div class="auth-small" onclick="skipPIN()" style="margin-top:28px">Skip — set PIN later from settings</div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="main-app" style="display:none">
+
+<div class="topbar" id="topbar">
+  <div class="logo-wrap">
+    <div class="logo">Prop<span>Book</span></div>
+    <div class="logo-sub" id="tb-sub">Property Manager</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="topbar-btn" onclick="document.getElementById('lang-modal').classList.add('show')" title="Language">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+    </button>
+    <button class="topbar-btn" onclick="exportData()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    </button>
+    <button class="topbar-btn" onclick="document.getElementById('import-input').click()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+    </button>
+    <button class="topbar-btn" id="signout-btn" onclick="signOut()" title="Sign Out" style="color:rgba(255,100,100,.8)">⏻</button>
+  </div>
+</div>
+
+<input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handleMedia(event,'photo')">
+<input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleMedia(event,'video')">
+<input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<div class="view active" id="view-dashboard">
+  <div class="dash-greeting">
+    <div class="day" id="dash-day"></div>
+    <div class="title" id="dash-title"></div>
+  </div>
+  <div class="ring-card">
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 90 90">
+        <circle class="ring-bg" cx="45" cy="45" r="37"/>
+        <circle class="ring-fill" id="ring-fill" cx="45" cy="45" r="37" stroke-dasharray="232" stroke-dashoffset="232"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-num" id="r-total">0</div>
+        <div class="ring-label" id="r-label">Total</div>
+      </div>
+    </div>
+    <div class="ring-stats">
+      <div class="ring-stat-row">
+        <div class="ring-stat-dot" style="background:#4ADE80"></div>
+        <div class="ring-stat-name" id="rs-avail-label">Available</div>
+        <div class="ring-stat-bar-wrap"><div class="ring-stat-bar" id="rb-avail" style="background:#4ADE80;width:0%"></div></div>
+        <div class="ring-stat-val" id="rv-avail">0</div>
+      </div>
+      <div class="ring-stat-row">
+        <div class="ring-stat-dot" style="background:var(--gold)"></div>
+        <div class="ring-stat-name" id="rs-nego-label">Negotiating</div>
+        <div class="ring-stat-bar-wrap"><div class="ring-stat-bar" id="rb-nego" style="background:var(--gold);width:0%"></div></div>
+        <div class="ring-stat-val" id="rv-nego">0</div>
+      </div>
+      <div class="ring-stat-row">
+        <div class="ring-stat-dot" style="background:#F87171"></div>
+        <div class="ring-stat-name" id="rs-sold-label">Sold / Rented</div>
+        <div class="ring-stat-bar-wrap"><div class="ring-stat-bar" id="rb-sold" style="background:#F87171;width:0%"></div></div>
+        <div class="ring-stat-val" id="rv-sold">0</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-head">
+    <div class="sec-title" id="dash-browse-title">Browse by Type</div>
+  </div>
+  <div class="chips-row" id="dash-chips"></div>
+  <div class="sec-head">
+    <div class="sec-title" id="dash-recent-title">Recent Properties</div>
+    <div class="sec-link" id="dash-see-all" onclick="switchView('list')">See All →</div>
+  </div>
+  <div id="recent-list"></div>
+</div>
+
+<div class="view" id="view-list">
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+      <input class="search-input" id="search-input" oninput="renderList()">
+    </div>
+    <button class="filter-btn" id="filter-btn" onclick="showFilterModal()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      Filter
+    </button>
+  </div>
+  <div class="chips-row" id="list-chips"></div>
+  <div id="prop-list"></div>
+  <div style="height:10px"></div>
+</div>
+
+<div class="view" id="view-add">
+  <div class="form-section">
+    <div class="fs-head" id="fs-type-head">Property Type</div>
+    <div class="type-grid" id="type-grid"></div>
+  </div>
+  <div class="form-section">
+    <div class="fs-head" id="fs-details-head">Property Details</div>
+    <div class="form-group"><label class="form-label" id="lbl-title">Name *</label><input class="form-control" id="f-title"></div>
+    <div class="form-group"><label class="form-label" id="lbl-location">Location *</label><input class="form-control" id="f-location"></div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0"><label class="form-label" id="lbl-area">Area</label><input class="form-control" id="f-area" type="number"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label" id="lbl-unit">Unit</label><select class="form-control" id="f-areaunit"></select></div>
+    </div>
+    <div class="form-group" style="margin-top:14px"><label class="form-label" id="lbl-desc">Description</label><textarea class="form-control" id="f-desc"></textarea></div>
+  </div>
+  <div class="form-section">
+    <div class="fs-head" id="fs-price-head">Price / Rate</div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0"><label class="form-label" id="lbl-price">Price *</label><input class="form-control" id="f-price" type="number" step="0.1"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label" id="lbl-pricein">In</label><select class="form-control" id="f-priceunit"></select></div>
+    </div>
+    <div class="form-group" style="margin-top:14px"><label class="form-label" id="lbl-status">Status</label><select class="form-control" id="f-status"></select></div>
+  </div>
+  <div class="form-section">
+    <div class="fs-head" id="fs-owner-head">Owner Information</div>
+    <div class="form-group"><label class="form-label" id="lbl-owner">Owner Name *</label><input class="form-control" id="f-owner"></div>
+    <div class="form-group"><label class="form-label" id="lbl-ownerph">Owner Phone *</label><input class="form-control" id="f-ownerphone" type="tel"></div>
+    <div class="form-group"><label class="form-label" id="lbl-ref">Reference</label><input class="form-control" id="f-ref"></div>
+    <div class="form-group"><label class="form-label" id="lbl-refph">Reference Phone</label><input class="form-control" id="f-refphone" type="tel"></div>
+  </div>
+  <div class="form-section">
+    <div class="fs-head" id="fs-media-head">Photos &amp; Videos</div>
+    <div class="media-tabs">
+      <button class="media-tab active" onclick="setMediaTab('photo',this)">📷 <span id="tab-photo-lbl">Photos</span></button>
+      <button class="media-tab" onclick="setMediaTab('video',this)">🎬 <span id="tab-video-lbl">Video</span></button>
+      <button class="media-tab" onclick="setMediaTab('yt',this)">▶ YouTube</button>
+    </div>
+    <div id="mtab-photo">
+      <div class="upload-zone" onclick="document.getElementById('photo-input').click()">
+        <div class="uz-icon">📷</div>
+        <p id="photo-upload-text">Tap to add photos<br><small>Max 8 · JPG, PNG</small></p>
+      </div>
+    </div>
+    <div id="mtab-video" style="display:none">
+      <div class="video-note" id="video-note-text">⚠️ For large videos, use YouTube link instead.</div>
+      <div class="upload-zone" onclick="document.getElementById('video-input').click()">
+        <div class="uz-icon">🎬</div>
+        <p id="video-upload-text">Add video<br><small>Max 1 · MP4, MOV</small></p>
+      </div>
+    </div>
+    <div id="mtab-yt" style="display:none">
+      <div class="yt-box">
+        <div class="yt-note" id="yt-note-text">📌 Upload on YouTube, paste the link here.</div>
+        <label class="form-label" id="lbl-ytlink">YouTube Link</label>
+        <input class="form-control" id="f-yturl" placeholder="https://youtu.be/xxxxxxxxxx" oninput="previewYT()">
+        <div class="yt-preview" id="yt-preview-box"><iframe id="yt-iframe" allowfullscreen></iframe></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary btn-sm" onclick="addYTLink()" id="yt-add-btn" style="flex:1">✅ Add</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearYT()">✕</button>
+        </div>
+      </div>
+    </div>
+    <div class="media-grid" id="media-preview"></div>
+    <div class="media-count-label" id="media-count"></div>
+  </div>
+  <div id="upload-progress-box" style="display:none">
+    <div class="upload-progress">
+      <span id="upload-progress-text">Uploading photos...</span>
+      <div class="upload-bar-wrap"><div class="upload-bar" id="upload-bar"></div></div>
+    </div>
+  </div>
+  <button class="btn btn-primary" id="save-btn" onclick="saveProperty()">💾 Save Property</button>
+  <div style="height:14px"></div>
+</div>
+
+<div class="view" id="view-detail">
+  <div class="detail-gallery" id="detail-gallery"></div>
+  <div class="detail-card" id="detail-header"></div>
+  <div class="detail-card" id="detail-info"></div>
+  <div id="detail-contacts"></div>
+  <div class="action-row">
+    <button class="action-btn ab-edit" onclick="editCurrentProp()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <span id="ab-edit-lbl">Edit</span>
+    </button>
+    <button class="action-btn ab-share" onclick="openShareModal()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+      <span id="ab-share-lbl">Share</span>
+    </button>
+    <button class="action-btn ab-del" onclick="deleteCurrentProp()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      <span id="ab-del-lbl">Delete</span>
+    </button>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="openAddForm()">+</button>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchView('dashboard')" id="nav-dashboard">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span id="nav-dash-lbl">Dashboard</span>
+  </button>
+  <button class="nav-item" onclick="switchView('list')" id="nav-list">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <span id="nav-props-lbl">Properties</span>
+  </button>
+  <button class="nav-item" onclick="openAddForm()" id="nav-add">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span id="nav-add-lbl">Add</span>
+  </button>
+</nav>
+
+</div><!-- end #main-app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="filter-modal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="filter-title">Filter & Sort</div>
+    <div class="modal-sub" id="filter-sub">Filter your properties</div>
+    <div class="form-group"><label class="form-label" id="filter-status-lbl">Status</label>
+      <select class="form-control" id="filter-status" onchange="renderList()"></select>
+    </div>
+    <div class="form-group"><label class="form-label" id="filter-sort-lbl">Sort</label>
+      <select class="form-control" id="filter-sort" onchange="renderList()"></select>
+    </div>
+    <button class="filter-modal-btn" style="background:var(--navy);color:#fff" id="apply-btn" onclick="document.getElementById('filter-modal').classList.remove('show')">Apply ✓</button>
+    <button class="filter-modal-btn" style="background:var(--cream);color:var(--text)" id="reset-btn" onclick="clearFilters()">Reset</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="share-title">Share Property</div>
+    <div class="modal-sub" id="share-sub">Where to share?</div>
+    <div class="share-grid">
+      <button class="share-opt" onclick="shareWhatsApp()"><div class="s-icon" style="background:#DCF8C6">💬</div><div class="s-label">WhatsApp</div></button>
+      <button class="share-opt" onclick="copyText()"><div class="s-icon" style="background:var(--blueL)">📋</div><div class="s-label" id="sh-copy-lbl">Copy</div></button>
+      <button class="share-opt" onclick="shareSMS()"><div class="s-icon" style="background:#EDE9FE">💌</div><div class="s-label">SMS</div></button>
+      <button class="share-opt" onclick="nativeShare()"><div class="s-icon" style="background:var(--goldL)">📱</div><div class="s-label" id="sh-more-lbl">More</div></button>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--textH);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px" id="share-preview-lbl">Message Preview</div>
+    <div class="preview-box" id="share-preview"></div>
+    <button class="btn btn-secondary" id="share-close-btn" onclick="document.getElementById('share-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="lang-modal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🌍 Choose Language</div>
+    <div class="modal-sub">Select your preferred language</div>
+    <div class="lang-list" id="lang-list"></div>
+    <button class="btn btn-secondary" onclick="document.getElementById('lang-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <div class="lightbox-count" id="lb-count"></div>
+  <img class="lightbox-img" id="lb-img" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+// ===== SUPABASE CONFIG =====
+let SUPABASE_URL = localStorage.getItem('pb_sb_url') || '';
+let SUPABASE_KEY = localStorage.getItem('pb_sb_key') || '';
+let sbClient = null;
+let currentUser = null;
+let isDemoMode = false;
+
+function initSupabase() {
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    try {
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      return true;
+    } catch(e) { return false; }
+  }
+  return false;
+}
+
+const ALL_SCREENS=['screen-config','screen-login','screen-loading','screen-pin','screen-pin-setup'];
+function hideAllScreens(){
+  ALL_SCREENS.forEach(s=>{const el=document.getElementById(s);if(el)el.classList.add('hidden');});
+  document.getElementById('main-app').style.display='none';
+}
+function showConfigScreen(){hideAllScreens();document.getElementById('screen-config').classList.remove('hidden');}
+function showLoginScreen(){hideAllScreens();document.getElementById('screen-login').classList.remove('hidden');}
+function showLoadingScreen(){hideAllScreens();document.getElementById('screen-loading').classList.remove('hidden');}
+function showMainApp(){hideAllScreens();document.getElementById('main-app').style.display='block';}
+function showPINEntry(){
+  hideAllScreens();
+  pinEntry='';updatePINDots();
+  const lock=parseInt(localStorage.getItem('pb_pin_lock')||'0');
+  const msg=document.getElementById('pin-msg');
+  if(lock>Date.now()){
+    const s=Math.ceil((lock-Date.now())/1000);
+    msg.textContent=`Too many attempts. Wait ${s}s`;msg.classList.add('error');
+  }else{msg.textContent='Enter your 4-digit PIN';msg.classList.remove('error');}
+  document.getElementById('screen-pin').classList.remove('hidden');
+}
+function showPINSetup(){
+  hideAllScreens();
+  pinSetupStep=1;pinSetupFirst='';pinSetupEntry='';
+  document.getElementById('pin-setup-tagline').textContent='Secure Your App';
+  document.getElementById('pin-setup-msg').textContent='Choose a 4-digit PIN to protect your app';
+  updatePINSetupDots();
+  document.getElementById('screen-pin-setup').classList.remove('hidden');
+}
+
+function launchApp(){
+  loadAgentProfile();
+  loadCloudinaryConfig();
+  applyI18n();
+  renderDashboard();
+  if(!isPINSet()){showPINSetup();}
+  else{showPINEntry();}
+}
+
+async function useDemoMode() {
+  isDemoMode = true;
+  currentUser = { id: 'demo-user', email: 'demo@propbook.local' };
+  // If no agent profile, ask for name+phone
+  loadAgentProfile();
+  if (!agentProfile.name) {
+    const name = prompt('Aapka naam kya hai? (Share message mein dikhega)') || 'Agent';
+    const phone = prompt('Aapka phone number?') || '';
+    agentProfile = { name: name.trim(), phone: phone.trim(), wa: phone.trim(), company: '' };
+    localStorage.setItem('pb_agent', JSON.stringify(agentProfile));
+  }
+  showLoadingScreen();
+  await loadDataDemo();
+  launchApp();
+}
+
+function saveConfig() {
+  const url = document.getElementById('cfg-url').value.trim();
+  const key = document.getElementById('cfg-key').value.trim();
+  if (!url || !key) { alert('Please enter Supabase URL and Key'); return; }
+  if (!url.startsWith('https://')) { alert('URL must start with https://'); return; }
+  // Agent profile
+  const agentName = document.getElementById('cfg-agent-name').value.trim();
+  const agentPhone = document.getElementById('cfg-agent-phone').value.trim();
+  if (!agentName || !agentPhone) { alert('Please enter your Name and Phone number'); return; }
+  const agentWA = document.getElementById('cfg-agent-wa').value.trim();
+  const agentCompany = document.getElementById('cfg-agent-company').value.trim();
+  // Cloudinary
+  const cldName = document.getElementById('cfg-cld-name').value.trim();
+  const cldPreset = document.getElementById('cfg-cld-preset').value.trim();
+  // Save all
+  localStorage.setItem('pb_sb_url', url);
+  localStorage.setItem('pb_sb_key', key);
+  localStorage.setItem('pb_agent', JSON.stringify({ name: agentName, phone: agentPhone, wa: agentWA || agentPhone, company: agentCompany }));
+  if (cldName && cldPreset) {
+    localStorage.setItem('pb_cld', JSON.stringify({ cloudName: cldName, preset: cldPreset }));
+  }
+  SUPABASE_URL = url; SUPABASE_KEY = key;
+  loadAgentProfile();
+  if (initSupabase()) {
+    showLoginScreen();
+  } else {
+    alert('Could not connect. Please check your keys.');
+  }
+}
+
+
+
+async function sendLoginLink() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email || !email.includes('@')) { alert('Please enter a valid email'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    const { error } = await sbClient.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.href }
+    });
+    if (error) throw error;
+    document.getElementById('login-email-sent').textContent = email;
+    document.getElementById('login-form-wrap').style.display = 'none';
+    document.getElementById('login-success').style.display = 'block';
+  } catch(e) {
+    alert('Error: ' + (e.message || 'Could not send link. Check your Supabase email settings.'));
+    btn.disabled = false; btn.textContent = '📧 Send Login Link';
+  }
+}
+
+async function signOut() {
+  if (isDemoMode) {
+    isDemoMode = false; currentUser = null; properties = [];
+    showLoginScreen(); return;
+  }
+  if (sbClient) await sbClient.auth.signOut();
+  currentUser = null; properties = [];
+  showLoginScreen();
+}
+
+// ===== LANGUAGE SYSTEM =====
+const LANGS = {
+  en:{name:"English",native:"English",flag:"🇬🇧",
+    appSub:"Property Manager",navDash:"Dashboard",navProps:"Properties",navAdd:"Add",
+    types:{zameen:"Land",flat:"Flat",makaan:"House",commercial:"Commercial",khet:"Farm",plot:"Plot"},
+    typeEmoji:{zameen:"🌾",flat:"🏢",makaan:"🏠",commercial:"🏪",khet:"🌿",plot:"📐"},
+    status:{available:"Available",negotiating:"Negotiating",sold:"Sold",rented:"Rented"},
+    days:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    dashGreeting:"Your Properties 🏡",dashBrowse:"Browse by Type",dashRecent:"Recent Properties",dashSeeAll:"See All →",
+    ringLabel:"Total",statAvail:"Available",statNego:"Negotiating",statSold:"Sold / Rented",
+    fsType:"Property Type",fsDetails:"Property Details",fsPrice:"Price / Rate",fsOwner:"Owner Information",fsMedia:"Photos & Videos",
+    lblTitle:"Property Name *",lblTitlePh:"e.g. 2BHK Flat Near Station",
+    lblLoc:"Location *",lblLocPh:"Colony, Area, City",
+    lblArea:"Area",lblAreaPh:"500",lblUnit:"Unit",
+    lblDesc:"Description",lblDescPh:"Important details...",
+    lblPrice:"Price *",lblPricePh:"25",lblPriceIn:"In",lblStatus:"Status",
+    lblOwner:"Owner's Name *",lblOwnerPh:"Owner's Name",
+    lblOwnerPh2:"Owner's Phone *",lblOwnerPhPh:"9876543210",
+    lblRef:"Reference",lblRefPh:"Reference Name",
+    lblRefPh2:"Reference Phone",lblRefPhPh:"Reference Phone",
+    tabPhoto:"Photos",tabVideo:"Video",
+    photoUpload:"Tap to add photos",photoUploadSub:"Max 8 photos · JPG, PNG",
+    videoNote:"⚠️ For large videos use YouTube link.",
+    videoUpload:"Add property video",videoUploadSub:"Max 1 video · MP4, MOV",
+    ytNote:"📌 Upload to YouTube, paste link here.",
+    ytLabel:"YouTube Link",ytAdd:"✅ Add",
+    btnSave:"☁️ Save to Cloud",btnUpdate:"✅ Update Property",
+    btnBack:"Back",btnEdit:"Edit",btnShare:"Share",btnDelete:"Delete",
+    btnClose:"Close",btnApply:"Apply ✓",btnReset:"Reset",
+    filterTitle:"Filter & Sort",filterSub:"Filter your properties",filterStatus:"Status",filterSort:"Sort",
+    statusOpts:["All Status","Available","Negotiating","Sold","Rented"],
+    sortOpts:["Newest First","Oldest First","Price: Low to High","Price: High to Low"],
+    areaUnits:["Sq.Ft.","Gaj","Bigha","Acre","Katha","Marla"],
+    priceUnits:["Lakh (₹)","Crore (₹)","Thousand (₹)","Per Sq.Ft.","Per Bigha"],
+    priceUnitDisplay:{lakh:"Lakh",crore:"Crore",thousand:"Thousand",sqft:"/sqft",bigha:"/Bigha"},
+    priceUnitShort:{lakh:"L",crore:"Cr",thousand:"K",sqft:"/sf",bigha:"/B"},
+    priceNA:"Price not given",
+    shareTitle:"Share Property",shareSub:"Where to share?",
+    shCopy:"Copy",shMore:"More Apps",sharePreviewLbl:"Message Preview",shareClose:"Close",
+    detailSection:"Property Details",detailArea:"📐 Area",detailDesc:"📋 Description",detailMedia:"📸 Media",
+    detailContacts:"Contacts",detailOwnerRole:"Owner",detailRefRole:"Reference",
+    detailNoPhone:"No number",detailAddedOn:"Added on:",detailPhoto:"Photo",detailVideo:"Video",
+    emptyTitle:"No properties yet",emptyDesc:"Add your first property",
+    emptyAddBtn:"+ Add Property",emptySearchTitle:"No properties found",emptySearchDesc:"Try changing your search",
+    searchPh:"Name, location, owner...",filterBtnLbl:"Filter",
+    toastType:"⚠️ Select property type!",toastTitle:"⚠️ Title required!",
+    toastLoc:"⚠️ Location required!",toastOwner:"⚠️ Owner name required!",toastPhone:"⚠️ Phone required!",
+    toastMaxPhoto:"Max 8 photos!",toastMaxVideo:"Max 1 video!",
+    toastBigVideo:"⚠️ Video too large! Use YouTube.",
+    toastYTBad:"❌ Invalid YouTube link!",toastMaxYT:"Max 3 YouTube links!",
+    toastYTAdded:"✅ YouTube added!",toastPhotoAdded:"📷 Photo added!",toastVideoAdded:"🎬 Video added!",
+    toastSaved:"☁️ Saved to cloud!",toastUpdated:"✅ Updated!",toastSaving:"☁️ Uploading...",
+    toastDeleted:"🗑️ Deleted",toastExported:"✅ Exported!",toastNoExport:"No properties",
+    toastImported:" imported!",toastImportErr:"❌ Invalid file",
+    toastCopied:"✅ Copied!",toastCopyFail:"❌ Copy failed",
+    deleteConfirm:"Delete this property permanently?",
+    shareText:(p,fp)=>{const yts=(p.media||[]).filter(m=>m.type==='youtube');return`🏡 *${p.title}*\n\n📍 Type: ${{zameen:"Land",flat:"Flat",makaan:"House",commercial:"Commercial",khet:"Farm",plot:"Plot"}[p.type]||p.type}\n📍 Location: ${p.location}\n${p.area?`📐 Area: ${p.area} ${p.areaUnit}\n`:``}💰 Price: ${fp(p.price,p.priceUnit)}\n✅ Status: ${p.status}\n\n👤 *Owner:* ${p.ownerName}\n📞 ${p.ownerPhone}\n${p.reference?`🔗 Ref: ${p.reference}${p.referencePhone?' ('+p.referencePhone+')':''}\n`:``}${p.desc?`\n📋 ${p.desc}\n`:``}${yts.length?'\n🎬 Videos:\n'+yts.map(y=>`https://youtu.be/${y.ytId}`).join('\n'):``}\n\n_Shared via PropBook 🏡_`;}
+  },
+  hi:{name:"Hindi",native:"हिंदी",flag:"🇮🇳",
+    appSub:"प्रॉपर्टी मैनेजर",navDash:"डैशबोर्ड",navProps:"संपत्तियां",navAdd:"जोड़ें",
+    types:{zameen:"जमीन",flat:"फ्लैट",makaan:"मकान",commercial:"व्यावसायिक",khet:"खेत",plot:"प्लॉट"},
+    typeEmoji:{zameen:"🌾",flat:"🏢",makaan:"🏠",commercial:"🏪",khet:"🌿",plot:"📐"},
+    status:{available:"उपलब्ध",negotiating:"वार्ता में",sold:"बिका",rented:"किराए पर"},
+    days:["रविवार","सोमवार","मंगलवार","बुधवार","गुरुवार","शुक्रवार","शनिवार"],
+    dashGreeting:"आपकी संपत्तियां 🏡",dashBrowse:"प्रकार से देखें",dashRecent:"हाल की संपत्तियां",dashSeeAll:"सब देखें →",
+    ringLabel:"कुल",statAvail:"उपलब्ध",statNego:"वार्ता में",statSold:"बिका / किराए पर",
+    fsType:"संपत्ति प्रकार",fsDetails:"संपत्ति विवरण",fsPrice:"मूल्य / दर",fsOwner:"मालिक जानकारी",fsMedia:"फोटो & वीडियो",
+    lblTitle:"संपत्ति नाम *",lblTitlePh:"जैसे: 2BHK फ्लैट",
+    lblLoc:"स्थान *",lblLocPh:"कॉलोनी, शहर",
+    lblArea:"क्षेत्रफल",lblAreaPh:"500",lblUnit:"इकाई",
+    lblDesc:"विवरण",lblDescPh:"संपत्ति की जानकारी...",
+    lblPrice:"मूल्य *",lblPricePh:"25",lblPriceIn:"में",lblStatus:"स्थिति",
+    lblOwner:"मालिक का नाम *",lblOwnerPh:"मालिक का नाम",
+    lblOwnerPh2:"मालिक का फोन *",lblOwnerPhPh:"9876543210",
+    lblRef:"संदर्भ",lblRefPh:"संदर्भ नाम",lblRefPh2:"संदर्भ फोन",lblRefPhPh:"संदर्भ फोन",
+    tabPhoto:"फोटो",tabVideo:"वीडियो",
+    photoUpload:"फोटो जोड़ने के लिए टैप करें",photoUploadSub:"अधिकतम 8 फोटो",
+    videoNote:"⚠️ बड़ी वीडियो के लिए YouTube उपयोग करें।",
+    videoUpload:"वीडियो जोड़ें",videoUploadSub:"अधिकतम 1 वीडियो",
+    ytNote:"📌 YouTube पर अपलोड करके लिंक यहां डालें।",
+    ytLabel:"YouTube लिंक",ytAdd:"✅ जोड़ें",
+    btnSave:"☁️ क्लाउड में सहेजें",btnUpdate:"✅ अपडेट करें",
+    btnBack:"वापस",btnEdit:"संपादित",btnShare:"साझा करें",btnDelete:"हटाएं",
+    btnClose:"बंद करें",btnApply:"लागू करें",btnReset:"रीसेट",
+    filterTitle:"फ़िल्टर & जमाएं",filterSub:"संपत्तियां फ़िल्टर करें",filterStatus:"स्थिति",filterSort:"जमाएं",
+    statusOpts:["सभी","उपलब्ध","वार्ता में","बिका","किराए पर"],
+    sortOpts:["नया पहले","पुराना पहले","मूल्य: कम से ज्यादा","मूल्य: ज्यादा से कम"],
+    areaUnits:["Sq.Ft.","गज","बीघा","एकड़","कठा","मरला"],
+    priceUnits:["लाख (₹)","करोड़ (₹)","हजार (₹)","प्रति Sq.Ft.","प्रति बीघा"],
+    priceUnitDisplay:{lakh:"लाख",crore:"करोड़",thousand:"हजार",sqft:"/sqft",bigha:"/बीघा"},
+    priceUnitShort:{lakh:"L",crore:"Cr",thousand:"K",sqft:"/sf",bigha:"/B"},
+    priceNA:"मूल्य नहीं",
+    shareTitle:"साझा करें",shareSub:"कहां साझा करना है?",
+    shCopy:"कॉपी",shMore:"अन्य ऐप्स",sharePreviewLbl:"संदेश झलक",shareClose:"बंद करें",
+    detailSection:"संपत्ति विवरण",detailArea:"📐 क्षेत्रफल",detailDesc:"📋 विवरण",detailMedia:"📸 मीडिया",
+    detailContacts:"संपर्क",detailOwnerRole:"मालिक",detailRefRole:"संदर्भ",
+    detailNoPhone:"नंबर नहीं",detailAddedOn:"जोड़ा गया:",detailPhoto:"फोटो",detailVideo:"वीडियो",
+    emptyTitle:"कोई संपत्ति नहीं",emptyDesc:"अपनी पहली संपत्ति जोड़ें",
+    emptyAddBtn:"+ संपत्ति जोड़ें",emptySearchTitle:"कोई नहीं मिला",emptySearchDesc:"खोज बदलें",
+    searchPh:"नाम, स्थान, मालिक...",filterBtnLbl:"फ़िल्टर",
+    toastType:"⚠️ प्रकार चुनें!",toastTitle:"⚠️ नाम जरूरी!",toastLoc:"⚠️ स्थान जरूरी!",
+    toastOwner:"⚠️ मालिक नाम जरूरी!",toastPhone:"⚠️ फोन जरूरी!",
+    toastMaxPhoto:"अधिकतम 8!",toastMaxVideo:"अधिकतम 1!",
+    toastBigVideo:"⚠️ बड़ी वीडियो! YouTube उपयोग करें।",
+    toastYTBad:"❌ सही YouTube लिंक!",toastMaxYT:"अधिकतम 3!",
+    toastYTAdded:"✅ YouTube जोड़ा!",toastPhotoAdded:"📷 फोटो जोड़ी!",toastVideoAdded:"🎬 वीडियो जोड़ी!",
+    toastSaved:"☁️ क्लाउड में सहेजी!",toastUpdated:"✅ अपडेट!",toastSaving:"☁️ अपलोड...",
+    toastDeleted:"🗑️ हटा दिया",toastExported:"✅ एक्सपोर्ट!",toastNoExport:"कोई संपत्ति नहीं",
+    toastImported:" आयात!",toastImportErr:"❌ फाइल गलत",toastCopied:"✅ कॉपी!",toastCopyFail:"❌ कॉपी नहीं",
+    deleteConfirm:"क्या हमेशा के लिए हटाएं?",
+    shareText:(p,fp)=>{const yts=(p.media||[]).filter(m=>m.type==='youtube');return`🏡 *${p.title}*\n📍 ${p.location}\n${p.area?`📐 ${p.area} ${p.areaUnit}\n`:``}💰 ${fp(p.price,p.priceUnit)}\n👤 ${p.ownerName} 📞 ${p.ownerPhone}\n${p.reference?`🔗 ${p.reference}\n`:``}${p.desc?`\n${p.desc}\n`:``}${yts.length?'\n'+yts.map(y=>`https://youtu.be/${y.ytId}`).join('\n'):``}\n_PropBook 🏡_`;}
+  },
+  hinglish:{name:"Hinglish",native:"Hinglish",flag:"🇮🇳",
+    appSub:"Property Manager",navDash:"Dashboard",navProps:"Properties",navAdd:"Add Karo",
+    types:{zameen:"Zameen",flat:"Flat",makaan:"Makaan",commercial:"Commercial",khet:"Khet",plot:"Plot"},
+    typeEmoji:{zameen:"🌾",flat:"🏢",makaan:"🏠",commercial:"🏪",khet:"🌿",plot:"📐"},
+    status:{available:"Available",negotiating:"Negotiating",sold:"Sold",rented:"Rented"},
+    days:["Ravivar","Somvar","Mangalvar","Budhvar","Guruvar","Shukravar","Shanivar"],
+    dashGreeting:"Aapki Properties 🏡",dashBrowse:"Type se dekhein",dashRecent:"Haal ki Properties",dashSeeAll:"Sab dekhein →",
+    ringLabel:"Total",statAvail:"Available",statNego:"Negotiating",statSold:"Sold/Rented",
+    fsType:"Property Type",fsDetails:"Property Details",fsPrice:"Rate / Qeemat",fsOwner:"Malik ki Jankari",fsMedia:"Photos & Videos",
+    lblTitle:"Property ka Naam *",lblTitlePh:"jaise: 2BHK Flat",
+    lblLoc:"Location *",lblLocPh:"Colony, Area, City",
+    lblArea:"Area",lblAreaPh:"500",lblUnit:"Unit",
+    lblDesc:"Vivran",lblDescPh:"Property ke baare mein...",
+    lblPrice:"Qeemat *",lblPricePh:"25",lblPriceIn:"Mein",lblStatus:"Status",
+    lblOwner:"Malik ka Naam *",lblOwnerPh:"Malik ka naam",
+    lblOwnerPh2:"Malik ka Phone *",lblOwnerPhPh:"9876543210",
+    lblRef:"Reference",lblRefPh:"Reference ka naam",lblRefPh2:"Reference Phone",lblRefPhPh:"Reference phone",
+    tabPhoto:"Photos",tabVideo:"Video",
+    photoUpload:"Photos add karne ke liye tap karein",photoUploadSub:"Max 8 photos",
+    videoNote:"⚠️ Badi videos ke liye YouTube use karein.",
+    videoUpload:"Video add karein",videoUploadSub:"Max 1 video",
+    ytNote:"📌 YouTube par upload karke link yahan paste karein.",
+    ytLabel:"YouTube Link",ytAdd:"✅ Add Karo",
+    btnSave:"☁️ Cloud mein Save Karo",btnUpdate:"✅ Update Karo",
+    btnBack:"Wapas",btnEdit:"Edit",btnShare:"Share",btnDelete:"Delete",
+    btnClose:"Band Karo",btnApply:"Apply ✓",btnReset:"Reset",
+    filterTitle:"Filter & Sort",filterSub:"Filter karein",filterStatus:"Status",filterSort:"Sort",
+    statusOpts:["Sab","Available","Negotiating","Sold","Rented"],
+    sortOpts:["Nayi pehle","Purani pehle","Price: Kam","Price: Zyada"],
+    areaUnits:["Sq.Ft.","Gaj","Bigha","Acre","Katha","Marla"],
+    priceUnits:["Lakh (₹)","Crore (₹)","Hazaar (₹)","Per Sq.Ft.","Per Bigha"],
+    priceUnitDisplay:{lakh:"Lakh",crore:"Crore",thousand:"Hazaar",sqft:"/sqft",bigha:"/Bigha"},
+    priceUnitShort:{lakh:"L",crore:"Cr",thousand:"K",sqft:"/sf",bigha:"/B"},
+    priceNA:"Qeemat na diya",
+    shareTitle:"Share Karo",shareSub:"Kahan share?",
+    shCopy:"Copy",shMore:"Aur Apps",sharePreviewLbl:"Message Preview",shareClose:"Band Karo",
+    detailSection:"Property Details",detailArea:"📐 Area",detailDesc:"📋 Vivran",detailMedia:"📸 Media",
+    detailContacts:"Contacts",detailOwnerRole:"Malik",detailRefRole:"Reference",
+    detailNoPhone:"Number nahi",detailAddedOn:"Add kiya:",detailPhoto:"Photo",detailVideo:"Video",
+    emptyTitle:"Koi property nahi",emptyDesc:"Pehli property add karein",
+    emptyAddBtn:"+ Add Karo",emptySearchTitle:"Koi nahi mila",emptySearchDesc:"Search badlein",
+    searchPh:"Naam, location...",filterBtnLbl:"Filter",
+    toastType:"⚠️ Type chuniye!",toastTitle:"⚠️ Naam zaroori!",toastLoc:"⚠️ Location zaroori!",
+    toastOwner:"⚠️ Malik naam!",toastPhone:"⚠️ Phone!",
+    toastMaxPhoto:"Max 8!",toastMaxVideo:"Max 1!",toastBigVideo:"⚠️ YouTube use karein!",
+    toastYTBad:"❌ YouTube link sahi karo!",toastMaxYT:"Max 3!",
+    toastYTAdded:"✅ YouTube add!",toastPhotoAdded:"📷 Photo!",toastVideoAdded:"🎬 Video!",
+    toastSaved:"☁️ Save ho gaya!",toastUpdated:"✅ Update!",toastSaving:"☁️ Upload...",
+    toastDeleted:"🗑️ Delete",toastExported:"✅ Export!",toastNoExport:"Kuch nahi",
+    toastImported:" import!",toastImportErr:"❌ File sahi nahi",toastCopied:"✅ Copy!",toastCopyFail:"❌ Copy nahi",
+    deleteConfirm:"Delete kar dein? Wapas nahi aayega!",
+    shareText:(p,fp)=>{const yts=(p.media||[]).filter(m=>m.type==='youtube');return`🏡 *${p.title}*\n📍 ${p.location}\n${p.area?`📐 ${p.area} ${p.areaUnit}\n`:``}💰 ${fp(p.price,p.priceUnit)}\n👤 Malik: ${p.ownerName} 📞 ${p.ownerPhone}\n${p.reference?`🔗 Ref: ${p.reference}\n`:``}${p.desc?`\n${p.desc}\n`:``}${yts.length?'\n'+yts.map(y=>`https://youtu.be/${y.ytId}`).join('\n'):``}\n_PropBook 🏡_`;}
+  }
+};
+// Stub languages
+['mr','gu','ta','te','bn','pa'].forEach(k=>{
+  const info={mr:{name:"Marathi",native:"मराठी",flag:"🇮🇳",appSub:"मत्ता व्यवस्थापक"},
+               gu:{name:"Gujarati",native:"ગુજરાતી",flag:"🇮🇳",appSub:"પ્રૉપર્ટી મૅનૅજર"},
+               ta:{name:"Tamil",native:"தமிழ்",flag:"🇮🇳",appSub:"சொத்து மேலாளர்"},
+               te:{name:"Telugu",native:"తెలుగు",flag:"🇮🇳",appSub:"ఆస్తి నిర్వాహకుడు"},
+               bn:{name:"Bengali",native:"বাংলা",flag:"🇮🇳",appSub:"সম্পত্তি ব্যবস্থাপনা"},
+               pa:{name:"Punjabi",native:"ਪੰਜਾਬੀ",flag:"🇮🇳",appSub:"ਜਾਇਦਾਦ ਮੈਨੇਜਰ"}}[k];
+  LANGS[k]=Object.assign({},LANGS.en,info);
+});
+
+const LANG_ORDER=['en','hinglish','hi','mr','gu','ta','te','bn','pa'];
+let currentLang=localStorage.getItem('propbook_lang')||'en';
+if(!LANGS[currentLang])currentLang='en';
+const L=LANGS[currentLang];
+function t(k){return L[k]!==undefined?L[k]:(LANGS.en[k]||k);}
+function setLang(l){localStorage.setItem('propbook_lang',l);location.reload();}
+
+function applyI18n(){
+  const set=(id,v,html=false)=>{const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}};
+  set('tb-sub',t('appSub'));set('nav-dash-lbl',t('navDash'));set('nav-props-lbl',t('navProps'));
+  set('nav-add-lbl',t('navAdd'));set('r-label',t('ringLabel'));
+  set('rs-avail-label',t('statAvail'));set('rs-nego-label',t('statNego'));set('rs-sold-label',t('statSold'));
+  set('dash-browse-title',t('dashBrowse'));set('dash-recent-title',t('dashRecent'));
+  set('dash-see-all',t('dashSeeAll'),true);
+  const si=document.getElementById('search-input');if(si)si.placeholder=t('searchPh');
+  set('filter-btn',`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg> ${t('filterBtnLbl')}`,true);
+  set('fs-type-head',t('fsType'));set('fs-details-head',t('fsDetails'));
+  set('fs-price-head',t('fsPrice'));set('fs-owner-head',t('fsOwner'));set('fs-media-head',t('fsMedia'));
+  set('lbl-title',t('lblTitle'));document.getElementById('f-title').placeholder=t('lblTitlePh');
+  set('lbl-location',t('lblLoc'));document.getElementById('f-location').placeholder=t('lblLocPh');
+  set('lbl-area',t('lblArea'));set('lbl-unit',t('lblUnit'));
+  set('lbl-desc',t('lblDesc'));document.getElementById('f-desc').placeholder=t('lblDescPh');
+  set('lbl-price',t('lblPrice'));set('lbl-pricein',t('lblPriceIn'));set('lbl-status',t('lblStatus'));
+  set('lbl-owner',t('lblOwner'));document.getElementById('f-owner').placeholder=t('lblOwnerPh');
+  set('lbl-ownerph',t('lblOwnerPh2'));
+  set('lbl-ref',t('lblRef'));document.getElementById('f-ref').placeholder=t('lblRefPh');
+  set('lbl-refph',t('lblRefPh2'));
+  set('tab-photo-lbl',t('tabPhoto'));set('tab-video-lbl',t('tabVideo'));
+  set('photo-upload-text',`${t('photoUpload')}<br><small>${t('photoUploadSub')}</small>`,true);
+  set('video-note-text',t('videoNote'),true);
+  set('video-upload-text',`${t('videoUpload')}<br><small>${t('videoUploadSub')}</small>`,true);
+  set('yt-note-text',t('ytNote'),true);set('lbl-ytlink',t('ytLabel'));set('yt-add-btn',t('ytAdd'));
+  set('save-btn',t('btnSave'),true);
+  set('ab-edit-lbl',t('btnEdit'));set('ab-share-lbl',t('btnShare'));set('ab-del-lbl',t('btnDelete'));
+  set('filter-title',t('filterTitle'),true);set('filter-sub',t('filterSub'));
+  set('filter-status-lbl',t('filterStatus'));set('filter-sort-lbl',t('filterSort'));
+  set('apply-btn',t('btnApply'));set('reset-btn',t('btnReset'));
+  set('share-title',t('shareTitle'));set('share-sub',t('shareSub'));
+  set('sh-copy-lbl',t('shCopy'));set('sh-more-lbl',t('shMore'));
+  set('share-preview-lbl',t('sharePreviewLbl'));set('share-close-btn',t('shareClose'));
+  const typeKeys=['zameen','flat','makaan','commercial','khet','plot'];
+  document.getElementById('type-grid').innerHTML=typeKeys.map(k=>`<div class="type-opt" onclick="selectType('${k}',this)"><div class="t-emoji">${t('typeEmoji')[k]}</div><div class="t-name">${t('types')[k]}</div></div>`).join('');
+  const auKeys=['sqft','gaj','bigha','acre','katha','marla'];
+  document.getElementById('f-areaunit').innerHTML=t('areaUnits').map((u,i)=>`<option value="${auKeys[i]}">${u}</option>`).join('');
+  const puKeys=['lakh','crore','thousand','sqft','bigha'];
+  document.getElementById('f-priceunit').innerHTML=t('priceUnits').map((u,i)=>`<option value="${puKeys[i]}">${u}</option>`).join('');
+  const stKeys=['','available','negotiating','sold','rented'],opts=t('statusOpts');
+  document.getElementById('f-status').innerHTML=opts.slice(1).map((s,i)=>`<option value="${stKeys[i+1]}">${s}</option>`).join('');
+  document.getElementById('filter-status').innerHTML=opts.map((s,i)=>`<option value="${stKeys[i]}">${s}</option>`).join('');
+  const soKeys=['newest','oldest','price-low','price-high'];
+  document.getElementById('filter-sort').innerHTML=t('sortOpts').map((s,i)=>`<option value="${soKeys[i]}">${s}</option>`).join('');
+  document.getElementById('lang-list').innerHTML=LANG_ORDER.map(k=>{
+    const lng=LANGS[k];if(!lng)return'';const active=k===currentLang;
+    return`<button class="lang-opt${active?' active':''}" onclick="setLang('${k}')"><div class="lang-left"><span class="lang-flag">${lng.flag}</span><div><div class="lang-native">${lng.native}</div><div class="lang-en-name">${lng.name}</div></div></div><span class="lang-check">✓</span></button>`;
+  }).join('');
+}
+
+// ===== SUPABASE DB LAYER =====
+let properties = [];
+
+async function dbGetAll() {
+  if (isDemoMode) return properties;
+  const { data, error } = await sbClient.from('properties').select('*').eq('user_id', currentUser.id);
+  if (error) throw error;
+  return data || [];
+}
+
+async function dbPut(prop) {
+  if (isDemoMode) {
+    const idx = properties.findIndex(p=>p.id===prop.id);
+    if(idx>-1) properties[idx]=prop; else properties.unshift(prop);
+    return;
+  }
+  const { error } = await sbClient.from('properties').upsert({...prop, user_id: currentUser.id});
+  if (error) throw error;
+}
+
+async function dbDel(id) {
+  if (isDemoMode) { properties = properties.filter(p=>p.id!==id); return; }
+  // Delete media from storage
+  const p = properties.find(x=>x.id===id);
+  if (p && p.media) {
+    const storageFiles = p.media.filter(m=>(m.type==='photo'||m.type==='video')&&m.storagePath);
+    if (storageFiles.length > 0) {
+      await sbClient.storage.from('property-media').remove(storageFiles.map(m=>m.storagePath));
+    }
+  }
+  const { error } = await sbClient.from('properties').delete().eq('id', id).eq('user_id', currentUser.id);
+  if (error) throw error;
+}
+
+// ===== AGENT PROFILE =====
+let agentProfile = { name: '', phone: '', wa: '', company: '' };
+
+function loadAgentProfile() {
+  try {
+    const saved = localStorage.getItem('pb_agent');
+    if (saved) agentProfile = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function getAgentProfile() { return agentProfile; }
+
+function openAgentSettings() {
+  const a = agentProfile;
+  const name = prompt('Your Name:', a.name);
+  if (name === null) return;
+  const phone = prompt('Your Phone:', a.phone);
+  if (phone === null) return;
+  const wa = prompt('Your WhatsApp (leave blank if same as phone):', a.wa !== a.phone ? a.wa : '');
+  const company = prompt('Agency / Company Name (optional):', a.company);
+  agentProfile = { name: name.trim(), phone: phone.trim(), wa: (wa||'').trim() || phone.trim(), company: (company||'').trim() };
+  localStorage.setItem('pb_agent', JSON.stringify(agentProfile));
+  showToast('✅ Agent profile updated!');
+}
+
+// ===== CLOUDINARY UPLOAD =====
+let cldConfig = null;
+
+function loadCloudinaryConfig() {
+  try {
+    const saved = localStorage.getItem('pb_cld');
+    if (saved) cldConfig = JSON.parse(saved);
+  } catch(e) {}
+}
+
+async function uploadMediaToStorage(dataUrl, propId, mediaId, type) {
+  // Try Cloudinary first
+  if (cldConfig && cldConfig.cloudName && cldConfig.preset) {
+    return await uploadToCloudinary(dataUrl, propId, mediaId, type);
+  }
+  // Fallback to Supabase storage
+  if (isDemoMode) return { url: dataUrl, storagePath: null };
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const ext = type === 'photo' ? 'jpg' : 'mp4';
+  const storagePath = `${currentUser.id}/${propId}/${mediaId}.${ext}`;
+  const { error } = await sbClient.storage.from('property-media').upload(storagePath, blob, { upsert: true, contentType: blob.type });
+  if (error) throw error;
+  const { data } = sbClient.storage.from('property-media').getPublicUrl(storagePath);
+  return { url: data.publicUrl, storagePath };
+}
+
+async function uploadToCloudinary(dataUrl, propId, mediaId, type) {
+  const formData = new FormData();
+  formData.append('file', dataUrl);
+  formData.append('upload_preset', cldConfig.preset);
+  formData.append('folder', `propbook/${propId}`);
+  formData.append('public_id', mediaId);
+  // Auto compress images
+  if (type === 'photo') {
+    formData.append('transformation', 'q_auto,f_auto,w_1200');
+  }
+  const resourceType = type === 'photo' ? 'image' : 'video';
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cldConfig.cloudName}/${resourceType}/upload`, {
+    method: 'POST',
+    body: formData
+  });
+  if (!res.ok) throw new Error('Cloudinary upload failed');
+  const data = await res.json();
+  return { url: data.secure_url, storagePath: data.public_id, cloudinary: true };
+}
+
+async function loadDataDemo() {
+  properties = [
+    {id:'demo1',type:'flat',title:'2BHK Flat Near Railway Station',location:'Kokar, Ranchi',area:'850',areaUnit:'sqft',price:'35',priceUnit:'lakh',status:'available',ownerName:'Ramesh Kumar',ownerPhone:'9876543210',reference:'Suresh Ji',referencePhone:'9988776655',desc:'2nd floor, lift, parking.',media:[{id:'dm1',type:'youtube',ytId:'dQw4w9WgXcQ',url:'https://youtu.be/dQw4w9WgXcQ'}],dateAdded:Date.now()-86400000*2,lastUpdated:Date.now()},
+    {id:'demo2',type:'zameen',title:'Commercial Plot Main Road',location:'Doranda, Ranchi',area:'2400',areaUnit:'sqft',price:'1.2',priceUnit:'crore',status:'negotiating',ownerName:'Vijay Singh',ownerPhone:'9765432109',reference:'',referencePhone:'',desc:'Corner plot, main road.',media:[],dateAdded:Date.now()-86400000*5,lastUpdated:Date.now()},
+    {id:'demo3',type:'makaan',title:'Double Storey House with Garden',location:'Harmu, Ranchi',area:'1800',areaUnit:'sqft',price:'55',priceUnit:'lakh',status:'available',ownerName:'Anita Devi',ownerPhone:'9654321098',reference:'Mohan Ji',referencePhone:'9543210987',desc:'4 bed, 2 bath, garden.',media:[],dateAdded:Date.now()-86400000*10,lastUpdated:Date.now()}
+  ];
+}
+
+// ===== MAIN APP LOGIC =====
+let editingId=null,currentDetailId=null,currentMedia=[],typeFilter='',currentMediaTab='photo';
+let lbPhotos=[];
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2);}
+function showToast(m,dur=2700){const el=document.getElementById('toast');el.innerHTML=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),dur);}
+function fmtPrice(p,u){if(!p)return t('priceNA');const d=(t('priceUnitDisplay')||LANGS.en.priceUnitDisplay)[u]||u;return '₹'+p+' '+d;}
+function fmtPriceShort(p,u){if(!p)return '—';const s=(t('priceUnitShort')||LANGS.en.priceUnitShort)[u]||'';return p+' '+s;}
+function getYTId(url){const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);return m?m[1]:null;}
+function initials(n){return n?n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2):'?';}
+function getTypeLabel(k){const tp=t('types');return(tp&&tp[k])||k;}
+function getTypeEmoji(k){const te=t('typeEmoji');return(te&&te[k])||'🏡';}
+function getStatusLabel(k){const st=t('status');return(st&&st[k])||k;}
+
+const TP={zameen:'tp-zameen',flat:'tp-flat',makaan:'tp-makaan',commercial:'tp-commercial',khet:'tp-khet',plot:'tp-plot'};
+const SM={available:'sp-available',negotiating:'sp-negotiating',sold:'sp-sold',rented:'sp-rented'};
+const GLOBE=`<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
+
+function switchView(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  const nav=document.getElementById('nav-'+view);if(nav)nav.classList.add('active');
+  document.getElementById('fab').style.display=(view==='detail'||view==='add')?'none':'flex';
+  const tb=document.getElementById('topbar');
+  const modeTag=isDemoMode?`<span class="offline-badge">DEMO</span>`:`<span class="sync-badge">☁️ Cloud</span>`;
+  if(view==='dashboard'){
+    tb.innerHTML=`<div class="logo-wrap"><div class="logo" style="display:flex;align-items:center;gap:8px">Prop<span>Book</span> ${modeTag}</div><div class="logo-sub">${t('appSub')}</div></div><div class="topbar-actions"><button class="topbar-btn" onclick="document.getElementById('lang-modal').classList.add('show')">${GLOBE}</button><button class="topbar-btn" onclick="exportData()"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button><button class="topbar-btn" onclick="document.getElementById('import-input').click()"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></button><button class="topbar-btn" onclick="openAgentSettings()" title="Agent Profile">👤</button><button class="topbar-btn" onclick="pinMenuAction()" title="PIN Lock">🔒</button><button class="topbar-btn" onclick="signOut()" style="color:rgba(255,130,130,.8)" title="Sign Out">⏻</button></div>`;
+    renderDashboard();
+  }else if(view==='list'){
+    tb.innerHTML=`<div class="logo-wrap"><div class="logo" style="font-size:17px">📋 ${t('navProps')}</div><div class="logo-sub" id="lcount"></div></div><div class="topbar-actions"><button class="topbar-btn" onclick="document.getElementById('lang-modal').classList.add('show')">${GLOBE}</button></div>`;
+    renderList();
+  }else if(view==='add'){
+    tb.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><button class="back-btn" onclick="switchView('list')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> ${t('btnBack')}</button><div class="logo" style="font-size:16px">${editingId?'✏️ Edit':'+'} ${t('navAdd')}</div></div>`;
+  }
+}
+
+function renderDashboard(){
+  const d=new Date(),days=t('days');
+  document.getElementById('dash-day').textContent=days[d.getDay()]+', '+d.toLocaleDateString('en-IN',{day:'numeric',month:'long'});
+  document.getElementById('dash-title').innerHTML=t('dashGreeting');
+  const total=properties.length,avail=properties.filter(p=>p.status==='available').length,nego=properties.filter(p=>p.status==='negotiating').length,sold=properties.filter(p=>p.status==='sold'||p.status==='rented').length;
+  document.getElementById('r-total').textContent=total;
+  ['avail','nego','sold'].forEach(k=>document.getElementById('rv-'+k).textContent=k==='avail'?avail:k==='nego'?nego:sold);
+  document.getElementById('rs-avail-label').textContent=t('statAvail');
+  document.getElementById('rs-nego-label').textContent=t('statNego');
+  document.getElementById('rs-sold-label').textContent=t('statSold');
+  const pct=total>0?avail/total:0,circ=2*Math.PI*37;
+  setTimeout(()=>{
+    document.getElementById('ring-fill').style.strokeDashoffset=circ-(pct*circ);
+    const pa=total>0?100/total:0;
+    document.getElementById('rb-avail').style.width=Math.min(avail*pa,100)+'%';
+    document.getElementById('rb-nego').style.width=Math.min(nego*pa,100)+'%';
+    document.getElementById('rb-sold').style.width=Math.min(sold*pa,100)+'%';
+  },100);
+  document.getElementById('dash-browse-title').textContent=t('dashBrowse');
+  document.getElementById('dash-recent-title').textContent=t('dashRecent');
+  document.getElementById('dash-see-all').innerHTML=t('dashSeeAll');
+  document.getElementById('dash-chips').innerHTML=['zameen','flat','makaan','commercial','khet','plot'].map(k=>{
+    const c=properties.filter(p=>p.type===k).length;
+    return`<div class="chip" onclick="typeFilter='${k}';switchView('list')">${getTypeEmoji(k)} ${getTypeLabel(k)} (${c})</div>`;
+  }).join('');
+  const recent=[...properties].sort((a,b)=>b.dateAdded-a.dateAdded).slice(0,5);
+  document.getElementById('recent-list').innerHTML=recent.length?recent.map(propCard).join(''):`<div class="empty"><div class="empty-icon">🏡</div><h3>${t('emptyTitle')}</h3><p>${t('emptyDesc')}</p><button class="btn btn-primary" style="width:auto;padding:13px 28px;margin:0 auto" onclick="openAddForm()">${t('emptyAddBtn')}</button></div>`;
+}
+
+function propCard(p){
+  const tpC=TP[p.type]||'tp-zameen',stC=SM[p.status]||'sp-available';
+  const media=p.media||[],photos=media.filter(m=>m.type==='photo'),vids=media.filter(m=>m.type==='video'||m.type==='youtube'),total=photos.length+vids.length;
+  let img=`<div class="card-img-placeholder">${getTypeEmoji(p.type)}</div>`;
+  if(photos.length>0)img=`<img src="${photos[0].url||photos[0].data}" loading="lazy">`;
+  else if(vids.length>0&&vids[0].type==='youtube')img=`<img src="https://img.youtube.com/vi/${vids[0].ytId}/hqdefault.jpg" loading="lazy"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none"><div style="width:48px;height:48px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">▶</div></div>`;
+  return`<div class="prop-card" onclick="openDetail('${p.id}')">
+    <div class="card-img">${img}<div class="card-img-overlay"></div>
+      <div class="card-price-overlay"><div class="price-main">${fmtPriceShort(p.price,p.priceUnit)}</div><div class="price-unit">${fmtPrice(p.price,p.priceUnit)}</div></div>
+      <div class="card-img-badges"><span class="status-pill ${stC}">${getStatusLabel(p.status)}</span>${total>1?`<span class="media-count-pill">📷${photos.length} 🎬${vids.length}</span>`:''}</div>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;gap:6px;margin-bottom:6px"><span class="type-pill ${tpC}">${getTypeEmoji(p.type)} ${getTypeLabel(p.type)}</span></div>
+      <div class="card-title">${p.title}</div>
+      <div class="card-loc"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${p.location}</div>
+      <div class="card-meta-row"><div class="card-owner"><div class="owner-avatar">${initials(p.ownerName)}</div><div class="owner-name">${p.ownerName}</div></div>${p.area?`<div class="card-area">${p.area} ${p.areaUnit}</div>`:''}</div>
+    </div></div>`;
+}
+
+function getFiltered(){
+  let list=[...properties];
+  const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+  const statusF=document.getElementById('filter-status')?.value||'';
+  const sortF=document.getElementById('filter-sort')?.value||'newest';
+  if(search)list=list.filter(p=>p.title.toLowerCase().includes(search)||p.location.toLowerCase().includes(search)||p.ownerName.toLowerCase().includes(search));
+  if(typeFilter)list=list.filter(p=>p.type===typeFilter);
+  if(statusF)list=list.filter(p=>p.status===statusF);
+  if(sortF==='newest')list.sort((a,b)=>b.dateAdded-a.dateAdded);
+  else if(sortF==='oldest')list.sort((a,b)=>a.dateAdded-b.dateAdded);
+  else if(sortF==='price-low')list.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
+  else list.sort((a,b)=>Number(b.price||0)-Number(a.price||0));
+  return list;
+}
+
+function renderList(){
+  const list=getFiltered();
+  const lc=document.getElementById('lcount');if(lc)lc.textContent=list.length+' properties';
+  const lchips=document.getElementById('list-chips');
+  if(lchips)lchips.innerHTML=`<div class="chip${typeFilter===''?' active':''}" onclick="typeFilter='';renderList()">All</div>`+['zameen','flat','makaan','commercial','khet','plot'].map(k=>`<div class="chip${typeFilter===k?' active':''}" onclick="typeFilter='${k}';renderList()">${getTypeEmoji(k)} ${getTypeLabel(k)}</div>`).join('');
+  document.getElementById('prop-list').innerHTML=list.length?list.map(propCard).join(''):`<div class="empty"><div class="empty-icon">🔍</div><h3>${t('emptySearchTitle')}</h3><p>${t('emptySearchDesc')}</p></div>`;
+}
+
+function showFilterModal(){document.getElementById('filter-modal').classList.add('show');}
+function clearFilters(){typeFilter='';const fs=document.getElementById('filter-status');const so=document.getElementById('filter-sort');if(fs)fs.value='';if(so)so.value='newest';const si=document.getElementById('search-input');if(si)si.value='';renderList();document.getElementById('filter-modal').classList.remove('show');}
+
+function openAddForm(id){
+  editingId=id||null;currentMedia=[];
+  document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('selected'));
+  ['title','location','area','desc','price','owner','ownerphone','ref','refphone'].forEach(f=>{const el=document.getElementById('f-'+f);if(el)el.value='';});
+  document.getElementById('f-areaunit').value='sqft';document.getElementById('f-priceunit').value='lakh';document.getElementById('f-status').value='available';
+  document.getElementById('f-yturl').value='';document.getElementById('yt-preview-box').style.display='none';
+  document.getElementById('upload-progress-box').style.display='none';
+  setMediaTab('photo',document.querySelector('.media-tab'));renderMediaPreview();
+  if(id){
+    const p=properties.find(x=>x.id===id);
+    if(p){
+      selectTypeByVal(p.type);
+      ['title','location','area','desc'].forEach(f=>{const el=document.getElementById('f-'+f);if(el)el.value=p[f]||'';});
+      document.getElementById('f-areaunit').value=p.areaUnit||'sqft';
+      document.getElementById('f-price').value=p.price||'';document.getElementById('f-priceunit').value=p.priceUnit||'lakh';
+      document.getElementById('f-status').value=p.status||'available';
+      document.getElementById('f-owner').value=p.ownerName||'';document.getElementById('f-ownerphone').value=p.ownerPhone||'';
+      document.getElementById('f-ref').value=p.reference||'';document.getElementById('f-refphone').value=p.referencePhone||'';
+      currentMedia=p.media?[...p.media]:[];renderMediaPreview();
+      document.getElementById('save-btn').innerHTML=t('btnUpdate');
+    }
+  }else{document.getElementById('save-btn').innerHTML=t('btnSave');}
+  switchView('add');
+}
+
+function selectType(type,el){document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');}
+function selectTypeByVal(type){const keys=['zameen','flat','makaan','commercial','khet','plot'];document.querySelectorAll('.type-opt').forEach((o,i)=>o.classList.toggle('selected',keys[i]===type));}
+function getSelectedType(){const keys=['zameen','flat','makaan','commercial','khet','plot'];let f='';document.querySelectorAll('.type-opt').forEach((o,i)=>{if(o.classList.contains('selected'))f=keys[i];});return f;}
+
+function setMediaTab(tab,el){
+  currentMediaTab=tab;
+  document.querySelectorAll('.media-tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');
+  ['photo','video','yt'].forEach(x=>document.getElementById('mtab-'+x).style.display=x===tab?'block':'none');
+}
+
+function handleMedia(e,type){
+  const limit=type==='photo'?8:1;const existing=currentMedia.filter(m=>m.type===type).length;
+  if(existing>=limit){showToast(type==='photo'?t('toastMaxPhoto'):t('toastMaxVideo'));e.target.value='';return;}
+  const file=e.target.files[0];if(!file){e.target.value='';return;}
+  if(type==='video'&&file.size>100*1024*1024){showToast(t('toastBigVideo'));e.target.value='';return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{currentMedia.push({id:uid(),type,data:ev.target.result,name:file.name,size:file.size,_file:file});renderMediaPreview();showToast(type==='photo'?t('toastPhotoAdded'):t('toastVideoAdded'));};
+  reader.readAsDataURL(file);e.target.value='';
+}
+
+function previewYT(){const url=document.getElementById('f-yturl').value;const ytid=getYTId(url);const box=document.getElementById('yt-preview-box');if(ytid){document.getElementById('yt-iframe').src=`https://www.youtube.com/embed/${ytid}`;box.style.display='block';}else box.style.display='none';}
+function addYTLink(){const url=document.getElementById('f-yturl').value.trim();const ytid=getYTId(url);if(!ytid){showToast(t('toastYTBad'));return;}if(currentMedia.filter(m=>m.type==='youtube').length>=3){showToast(t('toastMaxYT'));return;}currentMedia.push({id:uid(),type:'youtube',ytId:ytid,url});document.getElementById('f-yturl').value='';document.getElementById('yt-preview-box').style.display='none';renderMediaPreview();showToast(t('toastYTAdded'));}
+function clearYT(){document.getElementById('f-yturl').value='';document.getElementById('yt-preview-box').style.display='none';}
+function removeMedia(id){currentMedia=currentMedia.filter(m=>m.id!==id);renderMediaPreview();}
+
+function renderMediaPreview(){
+  const ph=currentMedia.filter(m=>m.type==='photo').length,vi=currentMedia.filter(m=>m.type==='video').length,yt=currentMedia.filter(m=>m.type==='youtube').length;
+  document.getElementById('media-preview').innerHTML=currentMedia.map(m=>{
+    let c='';
+    const src=m.url||m.data||'';
+    if(m.type==='photo')c=`<img src="${src}" loading="lazy">`;
+    else if(m.type==='video')c=`<video src="${src}" muted preload="metadata"></video><div class="media-type-tag">VIDEO</div>`;
+    else if(m.type==='youtube')c=`<img src="https://img.youtube.com/vi/${m.ytId}/mqdefault.jpg"><div class="media-type-tag">YT</div>`;
+    return`<div class="media-item">${c}<button class="media-del" onclick="removeMedia('${m.id}')">✕</button></div>`;
+  }).join('');
+  document.getElementById('media-count').textContent=currentMedia.length?`📷 ${ph} • 🎬 ${vi} • ▶ ${yt} YouTube`:'';
+}
+
+async function saveProperty(){
+  const type=getSelectedType(),title=document.getElementById('f-title').value.trim(),location=document.getElementById('f-location').value.trim(),owner=document.getElementById('f-owner').value.trim(),ownerPhone=document.getElementById('f-ownerphone').value.trim();
+  if(!type){showToast(t('toastType'));return;}if(!title){showToast(t('toastTitle'));return;}if(!location){showToast(t('toastLoc'));return;}if(!owner){showToast(t('toastOwner'));return;}if(!ownerPhone){showToast(t('toastPhone'));return;}
+  const btn=document.getElementById('save-btn');btn.disabled=true;
+  const propId=editingId||uid();
+  // Upload media to Supabase Storage
+  const filesToUpload=currentMedia.filter(m=>(m.type==='photo'||m.type==='video')&&m.data&&m.data.startsWith('data:'));
+  let processedMedia=[...currentMedia];
+  if(!isDemoMode && filesToUpload.length>0){
+    document.getElementById('upload-progress-box').style.display='block';
+    const bar=document.getElementById('upload-bar'),ptxt=document.getElementById('upload-progress-text');
+    for(let i=0;i<filesToUpload.length;i++){
+      const m=filesToUpload[i];
+      ptxt.textContent=`Uploading ${m.type} ${i+1}/${filesToUpload.length}...`;
+      bar.style.width=((i/filesToUpload.length)*100)+'%';
+      try{
+        const {url,storagePath}=await uploadMediaToStorage(m.data,propId,m.id,m.type);
+        const idx=processedMedia.findIndex(x=>x.id===m.id);
+        if(idx>-1)processedMedia[idx]={...m,url,storagePath,data:undefined,_file:undefined};
+      }catch(e){console.error('Upload failed',e);}
+    }
+    bar.style.width='100%';
+    setTimeout(()=>document.getElementById('upload-progress-box').style.display='none',500);
+  }
+  const prop={id:propId,type,title,location,area:document.getElementById('f-area').value,areaUnit:document.getElementById('f-areaunit').value,description:document.getElementById('f-desc').value,desc:document.getElementById('f-desc').value,price:document.getElementById('f-price').value,priceUnit:document.getElementById('f-priceunit').value,status:document.getElementById('f-status').value,ownerName:owner,ownerPhone,reference:document.getElementById('f-ref').value,referencePhone:document.getElementById('f-refphone').value,media:processedMedia.map(m=>({id:m.id,type:m.type,url:m.url,storagePath:m.storagePath,ytId:m.ytId,name:m.name})),dateAdded:editingId?(properties.find(p=>p.id===editingId)?.dateAdded||Date.now()):Date.now(),lastUpdated:Date.now()};
+  try{
+    await dbPut(prop);
+    if(editingId){const idx=properties.findIndex(p=>p.id===editingId);if(idx>-1)properties[idx]=prop;else properties.unshift(prop);}
+    else properties.unshift(prop);
+    showToast(editingId?t('toastUpdated'):t('toastSaved'));editingId=null;
+    setTimeout(()=>switchView('list'),500);
+  }catch(err){showToast('❌ Error: '+err.message);}
+  finally{btn.disabled=false;btn.innerHTML=editingId?t('btnUpdate'):t('btnSave');}
+}
+
+function openLightbox(photos,idx){lbPhotos=photos;document.getElementById('lb-img').src=photos[idx];document.getElementById('lb-count').textContent=(idx+1)+' / '+photos.length;document.getElementById('lightbox').classList.add('show');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('show');}
+
+function openDetail(id){
+  currentDetailId=id;const p=properties.find(x=>x.id===id);if(!p)return;
+  const tpC=TP[p.type]||'tp-zameen',stC=SM[p.status]||'sp-available';
+  const media=p.media||[],photos=media.filter(m=>m.type==='photo'),vids=media.filter(m=>m.type==='video'),yts=media.filter(m=>m.type==='youtube');
+  const allPhotoSrcs=photos.map(m=>m.url||m.data||'');
+  const dg=document.getElementById('detail-gallery');dg.style.display='flex';
+  dg.innerHTML=media.length?media.map(m=>{
+    const src=m.url||m.data||'';
+    if(m.type==='photo')return`<div class="gallery-slide${media.length===1?' full':''}"><img src="${src}" loading="lazy" onclick="openLightbox(${JSON.stringify(allPhotoSrcs)},${allPhotoSrcs.indexOf(src)})"></div>`;
+    if(m.type==='video')return`<div class="gallery-slide"><video src="${src}" controls muted playsinline style="width:100%;height:100%;object-fit:cover"></video></div>`;
+    if(m.type==='youtube'){const ytid=m.ytId;return`<div class="gallery-slide"><div style="position:relative;width:100%;height:100%"><img src="https://img.youtube.com/vi/${ytid}/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover"><div class="yt-tap-overlay" onclick="this.parentElement.innerHTML='<iframe src=\\'https://www.youtube.com/embed/${ytid}?autoplay=1\\' frameborder=\\'0\\' allowfullscreen allow=\\'autoplay\\' style=\\'width:100%;height:100%;border:none\\'></iframe>'"><div class="yt-play"><svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div></div></div>`;}
+    return'';}).join(''):`<div class="gallery-slide full" style="background:var(--cream2)">${getTypeEmoji(p.type)}</div>`;
+  document.getElementById('detail-header').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <span class="type-pill ${tpC}">${getTypeEmoji(p.type)} ${getTypeLabel(p.type)}</span>
+      <span class="status-pill ${stC}">${getStatusLabel(p.status)}</span>
+    </div>
+    <div class="detail-price">${fmtPrice(p.price,p.priceUnit)}</div>
+    <div class="detail-title">${p.title}</div>
+    <div class="detail-loc"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:-2px;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${p.location}</div>
+    <div class="detail-date">📅 ${t('detailAddedOn')} ${new Date(p.dateAdded).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}</div>`;
+  document.getElementById('detail-info').innerHTML=`
+    <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px">${t('detailSection')}</div>
+    ${p.area?`<div class="info-row"><span class="info-key">${t('detailArea')}</span><span class="info-val">${p.area} ${p.areaUnit}</span></div>`:''}
+    ${(p.desc||p.description)?`<div class="info-row"><span class="info-key">${t('detailDesc')}</span><span class="info-val">${p.desc||p.description}</span></div>`:''}
+    <div class="info-row"><span class="info-key">${t('detailMedia')}</span><span class="info-val">${photos.length} ${t('detailPhoto')} · ${vids.length+yts.length} ${t('detailVideo')}</span></div>`;
+  document.getElementById('detail-contacts').innerHTML=`<div class="contact-block">
+    <div class="contact-block-title">${t('detailContacts')}</div>
+    <div class="contact-row cr-owner"><div class="contact-left"><div class="contact-avatar ca-owner">${initials(p.ownerName)}</div><div class="contact-info"><div class="role ri-owner">${t('detailOwnerRole')}</div><div class="name ni-owner">${p.ownerName}</div><div class="phone pi-owner">📞 ${p.ownerPhone}</div></div></div><button class="call-circle cc-owner" onclick="window.open('tel:${p.ownerPhone}')">📞</button></div>
+    ${p.reference?`<div class="contact-row cr-ref"><div class="contact-left"><div class="contact-avatar ca-ref">${initials(p.reference)}</div><div class="contact-info"><div class="role ri-ref">${t('detailRefRole')}</div><div class="name ni-ref">${p.reference}</div><div class="phone pi-ref">📞 ${p.referencePhone||t('detailNoPhone')}</div></div></div>${p.referencePhone?`<button class="call-circle cc-ref" onclick="window.open('tel:${p.referencePhone}')">📞</button>`:''}</div>`:``}
+    </div>`;
+  document.getElementById('ab-edit-lbl').textContent=t('btnEdit');
+  document.getElementById('ab-share-lbl').textContent=t('btnShare');
+  document.getElementById('ab-del-lbl').textContent=t('btnDelete');
+  document.getElementById('topbar').innerHTML=`<div style="display:flex;align-items:center;gap:10px"><button class="back-btn" onclick="switchView('list')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> ${t('btnBack')}</button><div class="logo" style="font-size:15px">${getTypeEmoji(p.type)} ${p.title.length>22?p.title.substring(0,22)+'…':p.title}</div></div><div class="topbar-actions"><button class="topbar-btn" onclick="document.getElementById('lang-modal').classList.add('show')">${GLOBE}</button></div>`;
+  switchView('detail');
+}
+
+function editCurrentProp(){openAddForm(currentDetailId);}
+async function deleteCurrentProp(){if(!confirm(t('deleteConfirm')))return;try{await dbDel(currentDetailId);properties=properties.filter(p=>p.id!==currentDetailId);showToast(t('toastDeleted'));switchView('list');}catch(e){showToast('❌ '+e.message);}}
+
+function buildShareText(){
+  const p=properties.find(x=>x.id===currentDetailId);if(!p)return'';
+  const a=getAgentProfile();
+  const yts=(p.media||[]).filter(m=>m.type==='youtube');
+  const typeLabel={zameen:"Land",flat:"Flat",makaan:"House",commercial:"Commercial",khet:"Farm",plot:"Plot"};
+  const statusLabel={available:"Available",negotiating:"Negotiating",sold:"Sold",rented:"Rented"};
+  const agentLine = a.name ? `\n\n🏢 *Contact Agent:*\n👤 ${a.name}${a.company?' ('+a.company+')':''}\n📞 ${a.phone}${a.wa && a.wa!==a.phone?'\n💬 WhatsApp: '+a.wa:''}` : '';
+  return `🏡 *${p.title}*\n\n📍 Type: ${getTypeLabel(p.type)}\n📍 Location: ${p.location}\n${p.area?`📐 Area: ${p.area} ${p.areaUnit}\n`:''}💰 Price: ${fmtPrice(p.price,p.priceUnit)}\n✅ Status: ${getStatusLabel(p.status)}${p.desc?`\n\n📋 ${p.desc}`:''}${yts.length?'\n\n🎬 Videos:\n'+yts.map(y=>`https://youtu.be/${y.ytId}`).join('\n'):''}${agentLine}\n\n_Shared via PropBook 🏡_`;
+}
+function openShareModal(){document.getElementById('share-preview').textContent=buildShareText();document.getElementById('share-modal').classList.add('show');}
+function shareWhatsApp(){window.open('https://wa.me/?text='+encodeURIComponent(buildShareText()));document.getElementById('share-modal').classList.remove('show');}
+function shareSMS(){window.open('sms:?body='+encodeURIComponent(buildShareText()));document.getElementById('share-modal').classList.remove('show');}
+function copyText(){navigator.clipboard.writeText(buildShareText()).then(()=>{showToast(t('toastCopied'));document.getElementById('share-modal').classList.remove('show');}).catch(()=>showToast(t('toastCopyFail')));}
+async function nativeShare(){const text=buildShareText();if(navigator.share){try{await navigator.share({title:'Property Details',text});document.getElementById('share-modal').classList.remove('show');}catch(e){if(e.name!=='AbortError')copyText();}}else copyText();}
+
+function exportData(){if(!properties.length){showToast(t('toastNoExport'));return;}const blob=new Blob([JSON.stringify(properties,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='PropBook_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);showToast(t('toastExported'));}
+function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async ev=>{try{const imported=JSON.parse(ev.target.result);if(!Array.isArray(imported))throw new Error('Invalid');let added=0;for(const p of imported){if(!properties.find(x=>x.id===p.id)){await dbPut(p);properties.unshift(p);added++;}}renderDashboard();showToast('✅ '+added+t('toastImported'));}catch{showToast(t('toastImportErr'));}};reader.readAsText(file);e.target.value='';}
+
+// ===== PIN SYSTEM =====
+let pinEntry='',pinSetupEntry='',pinSetupStep=1,pinSetupFirst='',_pinCb=null;
+
+function isPINSet(){return !!localStorage.getItem('pb_pin');}
+function hashPIN(p){let h=5381;for(let i=0;i<p.length;i++)h=((h<<5)+h)+p.charCodeAt(i)|0;return h.toString();}
+function savePIN(p){localStorage.setItem('pb_pin',hashPIN(p));}
+function verifyPIN(p){return localStorage.getItem('pb_pin')===hashPIN(p);}
+
+function updatePINDots(){
+  for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d){d.classList.toggle('filled',i<pinEntry.length);d.classList.remove('error');}}
+}
+function updatePINSetupDots(){
+  for(let i=0;i<4;i++){const d=document.getElementById('psd'+i);if(d){d.classList.toggle('filled',i<pinSetupEntry.length);d.classList.remove('error');}}
+}
+
+function pinPress(digit){
+  const lock=parseInt(localStorage.getItem('pb_pin_lock')||'0');
+  const msg=document.getElementById('pin-msg');
+  if(lock>Date.now()){
+    const s=Math.ceil((lock-Date.now())/1000);
+    msg.textContent=`Too many attempts. Wait ${s}s`;msg.classList.add('error');return;
+  }
+  if(pinEntry.length>=4)return;
+  pinEntry+=digit;updatePINDots();
+  if(pinEntry.length===4){
+    setTimeout(()=>{
+      if(verifyPIN(pinEntry)){
+        localStorage.setItem('pb_pin_fails','0');
+        if(window._pinChangeMode){
+          window._pinChangeMode=false;
+          document.getElementById('pin-reset-link').style.display='';
+          showPINSetup();
+        }else{
+          showMainApp();
+        }
+      }else{
+        const fails=(parseInt(localStorage.getItem('pb_pin_fails')||'0'))+1;
+        localStorage.setItem('pb_pin_fails',fails.toString());
+        if(fails>=5){
+          localStorage.setItem('pb_pin_lock',(Date.now()+30000).toString());
+          msg.textContent='Too many attempts. Wait 30s';
+        }else{
+          msg.textContent=`Wrong PIN · ${5-fails} attempts left`;
+        }
+        msg.classList.add('error');
+        for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d)d.classList.add('error');}
+        document.getElementById('pin-dots').classList.add('pin-shake');
+        setTimeout(()=>{document.getElementById('pin-dots').classList.remove('pin-shake');pinEntry='';updatePINDots();},400);
+      }
+    },100);
+  }
+}
+
+function pinBackspace(){
+  pinEntry=pinEntry.slice(0,-1);updatePINDots();
+  const msg=document.getElementById('pin-msg');msg.textContent='Enter your 4-digit PIN';msg.classList.remove('error');
+}
+
+function pinForgot(){
+  if(confirm('This will sign you out and remove your PIN. Continue?')){
+    localStorage.removeItem('pb_pin');localStorage.removeItem('pb_pin_fails');localStorage.removeItem('pb_pin_lock');
+    signOut();
+  }
+}
+
+function pinSetupPress(digit){
+  if(pinSetupEntry.length>=4)return;
+  pinSetupEntry+=digit;updatePINSetupDots();
+  if(pinSetupEntry.length===4){
+    setTimeout(()=>{
+      if(pinSetupStep===1){
+        pinSetupFirst=pinSetupEntry;pinSetupEntry='';pinSetupStep=2;
+        document.getElementById('pin-setup-tagline').textContent='Confirm PIN';
+        document.getElementById('pin-setup-msg').textContent='Enter the same PIN again to confirm';
+        document.getElementById('pin-setup-msg').classList.remove('error');
+        updatePINSetupDots();
+      }else{
+        if(pinSetupEntry===pinSetupFirst){
+          savePIN(pinSetupEntry);
+          showToast('🔒 PIN set successfully!');
+          showMainApp();
+        }else{
+          document.getElementById('pin-setup-msg').textContent="PINs don't match — try again";
+          document.getElementById('pin-setup-msg').classList.add('error');
+          for(let i=0;i<4;i++){const d=document.getElementById('psd'+i);if(d)d.classList.add('error');}
+          document.getElementById('pin-setup-dots').classList.add('pin-shake');
+          setTimeout(()=>{
+            document.getElementById('pin-setup-dots').classList.remove('pin-shake');
+            pinSetupStep=1;pinSetupFirst='';pinSetupEntry='';
+            document.getElementById('pin-setup-tagline').textContent='Secure Your App';
+            document.getElementById('pin-setup-msg').textContent='Choose a 4-digit PIN to protect your app';
+            document.getElementById('pin-setup-msg').classList.remove('error');
+            updatePINSetupDots();
+          },400);
+        }
+      }
+    },100);
+  }
+}
+
+function pinSetupBackspace(){
+  pinSetupEntry=pinSetupEntry.slice(0,-1);updatePINSetupDots();
+}
+
+function skipPIN(){
+  showMainApp();
+}
+
+function pinMenuAction(){
+  if(isPINSet()){
+    const choice=confirm('PIN Lock is active.\n\nOK = Change PIN\nCancel = Remove PIN');
+    if(choice){
+      // Change PIN — verify old first
+      pinEntry='';updatePINDots();
+      document.getElementById('pin-msg').textContent='Enter your current PIN to change it';
+      document.getElementById('pin-msg').classList.remove('error');
+      window._pinChangeMode=true;
+      hideAllScreens();
+      document.getElementById('screen-pin').classList.remove('hidden');
+    }else{
+      if(confirm('Remove PIN lock? App will open without PIN.')){
+        localStorage.removeItem('pb_pin');
+        localStorage.removeItem('pb_pin_fails');
+        localStorage.removeItem('pb_pin_lock');
+        showToast('🔓 PIN removed');
+      }
+    }
+  }else{
+    showPINSetup();
+  }
+}
+
+function changePIN(){
+  // Verify old PIN first, then set new one
+  if(!isPINSet()){showPINSetup();return;}
+  pinEntry='';updatePINDots();
+  document.getElementById('pin-msg').textContent='Enter your current PIN';
+  document.getElementById('pin-msg').classList.remove('error');
+  document.getElementById('pin-reset-link').style.display='none';
+  hideAllScreens();
+  document.getElementById('screen-pin').classList.remove('hidden');
+  // Override: after correct PIN, go to setup instead of app
+  const origVerify=verifyPIN.toString();
+  window._pinChangeMode=true;
+}
+
+// Override pinPress for change-PIN mode
+const _origPinPress=pinPress;
+// (handled inline in pinPress via _pinChangeMode flag - see pinPress enhanced below)
+
+// ===== INIT =====
+async function init(){
+  if(!initSupabase()){showConfigScreen();return;}
+  showLoadingScreen();
+  if(sbClient){
+    sbClient.auth.onAuthStateChange(async(event,session)=>{
+      if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!currentUser){
+        currentUser=session.user;
+        try{ properties=await dbGetAll(); }catch(e){ properties=[]; }
+        launchApp();
+      }
+      if(event==='SIGNED_OUT'){ currentUser=null; properties=[]; showLoginScreen(); }
+    });
+  }
+  try{
+    const {data:{session}}=await sbClient.auth.getSession();
+    if(session){
+      currentUser=session.user;
+      properties=await dbGetAll();
+      launchApp();
+    }else{
+      showLoginScreen();
+    }
+  }catch(e){
+    console.error('Init error',e);
+    showLoginScreen();
+  }
+}
+init();
+</script>
+</body>
+</html>
