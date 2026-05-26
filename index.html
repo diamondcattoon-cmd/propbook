@@ -1252,8 +1252,6 @@ function handleImport(e){const file=e.target.files[0];if(!file)return;const read
 // ===== INIT =====
 async function init(){
   // Check for auth callback (email magic link)
-  const hash=window.location.hash;
-  if(hash&&hash.includes('access_token')){
     // Supabase handles this automatically
     window.location.hash='';
   }
