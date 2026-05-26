@@ -307,66 +307,43 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
 </head>
 <body>
 
-<!-- ===== SUPABASE CONFIG SCREEN ===== -->
+<!-- ===== SETUP SCREEN (Agent Profile only) ===== -->
 <div class="auth-screen" id="screen-config">
   <div class="auth-logo">Prop<span>Book</span></div>
-  <div class="auth-tagline">Cloud Setup</div>
+  <div class="auth-tagline">Welcome to PropBook</div>
   <div class="auth-card" style="max-height:80vh;overflow-y:auto">
-    <div class="auth-card-title">☁️ Connect to Cloud</div>
-    <div class="auth-card-sub">Connect PropBook to Supabase to save your data online. One-time setup.</div>
-    <div class="config-step">
-      <div class="config-step-num">1</div>
-      <div class="config-step-text">Go to <a href="https://supabase.com" target="_blank"><b>supabase.com</b></a> → Create free account → New project</div>
-    </div>
-    <div class="config-step">
-      <div class="config-step-num">2</div>
-      <div class="config-step-text">Run the SQL schema from <b>PropBook_Setup_Guide.md</b> in the SQL Editor</div>
-    </div>
-    <div class="config-step">
-      <div class="config-step-num">3</div>
-      <div class="config-step-text">Go to <b>Project Settings → API</b> and copy the keys below</div>
+    <div class="auth-card-title">👤 Your Agent Profile</div>
+    <div class="auth-card-sub">Yeh details share message aur PDF mein dikhegi — buyers aapko contact karenge</div>
+    <div class="form-group">
+      <label class="form-label" style="color:rgba(255,255,255,.5)">Your Name *</label>
+      <input class="auth-input" id="cfg-agent-name" placeholder="Aapka naam">
     </div>
     <div class="form-group">
-      <label class="form-label" style="color:rgba(255,255,255,.5)">Project URL</label>
-      <input class="auth-input" id="cfg-url" placeholder="https://xxxx.supabase.co" type="url">
+      <label class="form-label" style="color:rgba(255,255,255,.5)">Your Phone *</label>
+      <input class="auth-input" id="cfg-agent-phone" placeholder="9876543210" type="tel">
     </div>
     <div class="form-group">
-      <label class="form-label" style="color:rgba(255,255,255,.5)">Anon / Public Key</label>
-      <input class="auth-input" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+      <label class="form-label" style="color:rgba(255,255,255,.5)">WhatsApp Number (optional)</label>
+      <input class="auth-input" id="cfg-agent-wa" placeholder="Same as phone or different" type="tel">
     </div>
-    <div style="border-top:1px solid rgba(255,255,255,.1);margin:16px 0 16px;padding-top:16px">
-      <div class="auth-card-title" style="font-size:16px;margin-bottom:4px">📷 Cloudinary (Photos & Videos)</div>
-      <div class="auth-card-sub" style="margin-bottom:12px">Free 25GB storage. <a href="https://cloudinary.com" target="_blank" style="color:var(--gold)">cloudinary.com</a> → Sign up → Settings → API Keys</div>
-      <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.5)">Cloud Name</label>
-        <input class="auth-input" id="cfg-cld-name" placeholder="your-cloud-name">
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.5)">Upload Preset (unsigned)</label>
-        <input class="auth-input" id="cfg-cld-preset" placeholder="propbook_upload">
-      </div>
+    <div class="form-group">
+      <label class="form-label" style="color:rgba(255,255,255,.5)">Agency / Company (optional)</label>
+      <input class="auth-input" id="cfg-agent-company" placeholder="ABC Real Estate">
     </div>
-    <div style="border-top:1px solid rgba(255,255,255,.1);margin:0 0 16px;padding-top:16px">
-      <div class="auth-card-title" style="font-size:16px;margin-bottom:4px">👤 Your Agent Profile</div>
-      <div class="auth-card-sub" style="margin-bottom:12px">Yeh details share message mein dikhegi — buyers aapko contact karenge</div>
+    <input type="hidden" id="cfg-url" value="">
+    <input type="hidden" id="cfg-key" value="">
+    <div style="border-top:1px solid rgba(255,255,255,.1);margin:16px 0;padding-top:16px">
+      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px">📷 Cloudinary — Photos/Videos cloud storage (optional)</div>
       <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.5)">Your Name *</label>
-        <input class="auth-input" id="cfg-agent-name" placeholder="Aapka naam">
+        <label class="form-label" style="color:rgba(255,255,255,.4)">Cloud Name</label>
+        <input class="auth-input" id="cfg-cld-name" placeholder="your-cloud-name" style="opacity:.7">
       </div>
       <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.5)">Your Phone *</label>
-        <input class="auth-input" id="cfg-agent-phone" placeholder="9876543210" type="tel">
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.5)">Your WhatsApp (optional)</label>
-        <input class="auth-input" id="cfg-agent-wa" placeholder="9876543210 (if different)" type="tel">
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.5)">Agency / Company Name (optional)</label>
-        <input class="auth-input" id="cfg-agent-company" placeholder="ABC Real Estate">
+        <label class="form-label" style="color:rgba(255,255,255,.4)">Upload Preset</label>
+        <input class="auth-input" id="cfg-cld-preset" placeholder="propbook_upload" style="opacity:.7">
       </div>
     </div>
-    <button class="auth-btn" id="cfg-save-btn" onclick="saveConfig()">Connect PropBook ☁️</button>
+    <button class="auth-btn" id="cfg-save-btn" onclick="saveConfig()">Get Started →</button>
     <div class="auth-small" onclick="useDemoMode()">⚡ Try Demo Mode (data on this device only)</div>
   </div>
 </div>
@@ -786,8 +763,11 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
 <div class="toast" id="toast"></div>
 <script>
 // ===== SUPABASE CONFIG =====
-let SUPABASE_URL = localStorage.getItem('pb_sb_url') || '';
-let SUPABASE_KEY = localStorage.getItem('pb_sb_key') || '';
+// ===== SUPABASE CONFIG — HARDCODED =====
+const _SB_URL = 'https://jqnkwjgclwclfczhdyjy.supabase.co';
+const _SB_KEY = 'sb_publishable_FLkFPIPFy2G967ErqR7jAw_KB3BT8at';
+let SUPABASE_URL = localStorage.getItem('pb_sb_url') || _SB_URL;
+let SUPABASE_KEY = localStorage.getItem('pb_sb_key') || _SB_KEY;
 let sbClient = null;
 let currentUser = null;
 let isDemoMode = false;
@@ -866,10 +846,8 @@ async function useDemoMode() {
 }
 
 function saveConfig() {
-  const url = document.getElementById('cfg-url').value.trim();
-  const key = document.getElementById('cfg-key').value.trim();
-  if (!url || !key) { alert('Please enter Supabase URL and Key'); return; }
-  if (!url.startsWith('https://')) { alert('URL must start with https://'); return; }
+  const url = (document.getElementById('cfg-url').value.trim()) || _SB_URL;
+  const key = (document.getElementById('cfg-key').value.trim()) || _SB_KEY;
   // Agent profile
   const agentName = document.getElementById('cfg-agent-name').value.trim();
   const agentPhone = document.getElementById('cfg-agent-phone').value.trim();
@@ -2121,11 +2099,25 @@ function injectManifest() {
 async function init(){
   injectManifest();
   registerSW();
-  if(!initSupabase()){showConfigScreen();return;}
+  if(!initSupabase()){
+    // Keys hardcoded — should never fail, but fallback just in case
+    SUPABASE_URL=_SB_URL; SUPABASE_KEY=_SB_KEY;
+    if(!initSupabase()){showConfigScreen();return;}
+  }
   showLoadingScreen();
+
+  // Safety timeout — if loading takes >6s, show login screen
+  const loadingTimeout = setTimeout(()=>{
+    if(document.getElementById('screen-loading')&&!document.getElementById('screen-loading').classList.contains('hidden')){
+      console.warn('Loading timeout — showing login');
+      showLoginScreen();
+    }
+  }, 6000);
+
   if(sbClient){
     sbClient.auth.onAuthStateChange(async(event,session)=>{
       if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!currentUser){
+        clearTimeout(loadingTimeout);
         currentUser=session.user;
         try{ properties=await dbGetAll(); }catch(e){ properties=[]; }
         launchApp();
@@ -2133,16 +2125,20 @@ async function init(){
       if(event==='SIGNED_OUT'){ currentUser=null; properties=[]; showLoginScreen(); }
     });
   }
+
   try{
-    const {data:{session}}=await sbClient.auth.getSession();
+    const {data:{session},error}=await sbClient.auth.getSession();
+    clearTimeout(loadingTimeout);
+    if(error) throw error;
     if(session){
       currentUser=session.user;
-      properties=await dbGetAll();
+      try{ properties=await dbGetAll(); }catch(e){ properties=[]; }
       launchApp();
     }else{
       showLoginScreen();
     }
   }catch(e){
+    clearTimeout(loadingTimeout);
     console.error('Init error',e);
     showLoginScreen();
   }
