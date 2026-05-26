@@ -363,19 +363,55 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
   <div class="auth-logo">Prop<span>Book</span></div>
   <div class="auth-tagline">Property Manager</div>
   <div class="auth-card">
-    <div id="login-form-wrap">
+    <!-- STEP 1: Email input -->
+    <div id="login-step1">
       <div class="auth-card-title">Welcome Back 👋</div>
-      <div class="auth-card-sub">Enter your email to receive a login link. No password needed.</div>
-      <input class="auth-input" id="login-email" placeholder="your@email.com" type="email">
-      <button class="auth-btn" id="login-btn" onclick="sendLoginLink()">📧 Send Login Link</button>
+      <div class="auth-card-sub" id="login-step1-sub">Enter your email to continue</div>
+      <input class="auth-input" id="login-email" placeholder="your@email.com" type="email" onkeydown="if(event.key==='Enter')checkEmail()">
+      <button class="auth-btn" id="login-email-btn" onclick="checkEmail()">Continue →</button>
       <div class="auth-divider"><span>or</span></div>
       <button class="auth-btn auth-btn-secondary" onclick="showConfigScreen()">⚙️ Change Settings</button>
     </div>
-    <div class="auth-success" id="login-success" style="display:none">
-      <div class="success-icon">📬</div>
-      <p>Login link sent to<br><b id="login-email-sent"></b></p>
-      <p style="margin-top:12px;font-size:12px">Check your inbox (and spam folder).<br>Click the link to sign in.</p>
-      <button class="auth-btn" style="margin-top:20px" onclick="document.getElementById('login-success').style.display='none';document.getElementById('login-form-wrap').style.display='block'">Try Again</button>
+    <!-- STEP 2: Password input (shown after email check) -->
+    <div id="login-step2" style="display:none">
+      <div class="auth-card-title" id="login-step2-title">Enter Password 🔑</div>
+      <div class="auth-card-sub" id="login-step2-sub">Welcome back!</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div style="font-size:13px;color:rgba(255,255,255,.5)" id="login-email-show"></div>
+        <button onclick="backToEmail()" style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;font-family:inherit">Change</button>
+      </div>
+      <div style="position:relative">
+        <input class="auth-input" id="login-password" placeholder="Your password" type="password" style="padding-right:44px" onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="togglePwd('login-password')" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px">👁</button>
+      </div>
+      <button class="auth-btn" id="login-pwd-btn" onclick="doLogin()">🔓 Login</button>
+      <div class="auth-small" onclick="forgotPassword()" style="margin-top:12px">Forgot password?</div>
+    </div>
+    <!-- STEP 3: Set new password (first time) -->
+    <div id="login-step3" style="display:none">
+      <div class="auth-card-title">Set Password 🔐</div>
+      <div class="auth-card-sub">First time login — set a password for quick access next time</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div style="font-size:13px;color:rgba(255,255,255,.5)" id="login-email-show2"></div>
+      </div>
+      <div style="position:relative;margin-bottom:10px">
+        <input class="auth-input" id="login-newpwd" placeholder="Choose a password (min 6 chars)" type="password" style="padding-right:44px;margin-bottom:0">
+        <button onclick="togglePwd('login-newpwd')" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px">👁</button>
+      </div>
+      <div style="position:relative">
+        <input class="auth-input" id="login-confirmpwd" placeholder="Confirm password" type="password" style="padding-right:44px" onkeydown="if(event.key==='Enter')doSignup()">
+        <button onclick="togglePwd('login-confirmpwd')" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px">👁</button>
+      </div>
+      <button class="auth-btn" id="login-signup-btn" onclick="doSignup()" style="margin-top:10px">✅ Set Password & Login</button>
+    </div>
+    <!-- Forgot password success -->
+    <div id="login-forgot-success" style="display:none">
+      <div class="auth-success">
+        <div class="success-icon">📬</div>
+        <p>Password reset link sent to<br><b id="login-reset-email"></b></p>
+        <p style="margin-top:12px;font-size:12px">Check your inbox and click the link to reset your password.</p>
+        <button class="auth-btn" style="margin-top:20px" onclick="backToEmail()">Back to Login</button>
+      </div>
     </div>
   </div>
   <div style="font-size:12px;color:rgba(255,255,255,.2);margin-top:20px;text-align:center">PropBook v4 · Cloud Edition</div>
@@ -807,25 +843,127 @@ function saveConfig() {
 
 
 
-async function sendLoginLink() {
-  const email = document.getElementById('login-email').value.trim();
-  if (!email || !email.includes('@')) { alert('Please enter a valid email'); return; }
-  const btn = document.getElementById('login-btn');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  try {
-    const { error } = await sbClient.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.href }
-    });
-    if (error) throw error;
-    document.getElementById('login-email-sent').textContent = email;
-    document.getElementById('login-form-wrap').style.display = 'none';
-    document.getElementById('login-success').style.display = 'block';
-  } catch(e) {
-    alert('Error: ' + (e.message || 'Could not send link. Check your Supabase email settings.'));
-    btn.disabled = false; btn.textContent = '📧 Send Login Link';
+function togglePwd(id){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';}
+
+function backToEmail(){
+  document.getElementById('login-step1').style.display='block';
+  document.getElementById('login-step2').style.display='none';
+  document.getElementById('login-step3').style.display='none';
+  document.getElementById('login-forgot-success').style.display='none';
+}
+
+async function checkEmail(){
+  const email=document.getElementById('login-email').value.trim();
+  if(!email||!email.includes('@')){alert('Please enter a valid email');return;}
+  const btn=document.getElementById('login-email-btn');
+  btn.disabled=true;btn.textContent='Checking...';
+  // Check if user exists by trying to sign in with a dummy password
+  // If error is "Invalid login credentials" → user exists, show password
+  // If error is "Email not confirmed" → user exists
+  // If sign up succeeds → new user, show set password
+  try{
+    const {error}=await sbClient.auth.signInWithPassword({email,password:'__CHECK_ONLY__'});
+    if(error){
+      if(error.message.includes('Invalid login credentials')||error.message.includes('invalid')){
+        // User exists — show password screen
+        showPasswordStep(email,'Welcome back! Enter your password.');
+      } else if(error.message.includes('Email not confirmed')){
+        showPasswordStep(email,'Welcome back! Enter your password.');
+      } else {
+        // New user — show set password screen
+        showSetPasswordStep(email);
+      }
+    } else {
+      // Somehow logged in with dummy — unlikely, but handle
+      showPasswordStep(email,'Enter your password.');
+    }
+  }catch(e){
+    showSetPasswordStep(email);
+  }
+  btn.disabled=false;btn.textContent='Continue →';
+}
+
+function showPasswordStep(email, sub){
+  document.getElementById('login-step1').style.display='none';
+  document.getElementById('login-step2').style.display='block';
+  document.getElementById('login-step3').style.display='none';
+  document.getElementById('login-email-show').textContent=email;
+  document.getElementById('login-step2-sub').textContent=sub||'Welcome back!';
+  setTimeout(()=>document.getElementById('login-password').focus(),100);
+}
+
+function showSetPasswordStep(email){
+  document.getElementById('login-step1').style.display='none';
+  document.getElementById('login-step2').style.display='none';
+  document.getElementById('login-step3').style.display='block';
+  document.getElementById('login-email-show2').textContent=email;
+  setTimeout(()=>document.getElementById('login-newpwd').focus(),100);
+}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  if(!password){alert('Please enter your password');return;}
+  const btn=document.getElementById('login-pwd-btn');
+  btn.disabled=true;btn.textContent='Logging in...';
+  try{
+    const {data,error}=await sbClient.auth.signInWithPassword({email,password});
+    if(error){
+      if(error.message.includes('Invalid login credentials')){
+        alert('Wrong password. Please try again.');
+      } else {
+        alert('Error: '+error.message);
+      }
+      btn.disabled=false;btn.textContent='🔓 Login';
+      return;
+    }
+    // Success — onAuthStateChange will handle rest
+  }catch(e){
+    alert('Error: '+e.message);
+    btn.disabled=false;btn.textContent='🔓 Login';
   }
 }
+
+async function doSignup(){
+  const email=document.getElementById('login-email').value.trim();
+  const pwd=document.getElementById('login-newpwd').value;
+  const confirm=document.getElementById('login-confirmpwd').value;
+  if(pwd.length<6){alert('Password must be at least 6 characters');return;}
+  if(pwd!==confirm){alert('Passwords do not match');return;}
+  const btn=document.getElementById('login-signup-btn');
+  btn.disabled=true;btn.textContent='Setting up...';
+  try{
+    const {data,error}=await sbClient.auth.signUp({email,password:pwd});
+    if(error){
+      // If user already exists, try sign in
+      if(error.message.includes('already registered')||error.message.includes('already been registered')){
+        const {error:e2}=await sbClient.auth.signInWithPassword({email,password:pwd});
+        if(e2){alert('Wrong password. Use forgot password to reset.');btn.disabled=false;btn.textContent='✅ Set Password & Login';return;}
+      } else {
+        alert('Error: '+error.message);btn.disabled=false;btn.textContent='✅ Set Password & Login';return;
+      }
+    }
+    // Success — onAuthStateChange handles rest
+  }catch(e){
+    alert('Error: '+e.message);
+    btn.disabled=false;btn.textContent='✅ Set Password & Login';
+  }
+}
+
+async function forgotPassword(){
+  const email=document.getElementById('login-email').value.trim();
+  if(!email||!email.includes('@')){alert('Please enter your email first');return;}
+  try{
+    const {error}=await sbClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+    if(error)throw error;
+    document.getElementById('login-step2').style.display='none';
+    document.getElementById('login-reset-email').textContent=email;
+    document.getElementById('login-forgot-success').style.display='block';
+  }catch(e){
+    alert('Error: '+e.message);
+  }
+}
+
 
 async function signOut() {
   if (isDemoMode) {
