@@ -12,6 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --navy:#12153D;--navy2:#1C2154;--navy3:#252B6B;
@@ -201,6 +202,18 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
 .ab-del{background:var(--redL);color:var(--red)}
 .fab{position:fixed;bottom:96px;right:18px;background:var(--gold);color:#fff;border:none;border-radius:50%;width:58px;height:58px;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(201,146,42,.45);z-index:99;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
 .fab:active{transform:scale(.91)}
+/* Install Button */
+.install-btn{position:fixed;bottom:96px;left:18px;background:var(--navy);color:#fff;border:1.5px solid rgba(255,255,255,.15);border-radius:28px;padding:0 18px;height:46px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(18,21,61,.35);z-index:99;display:none;align-items:center;gap:8px;font-family:inherit;transition:all .2s;white-space:nowrap}
+.install-btn:active{transform:scale(.95)}
+.install-btn.show{display:flex}
+/* iOS install banner */
+.ios-banner{position:fixed;bottom:82px;left:12px;right:12px;background:var(--navy);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;z-index:98;display:none;box-shadow:var(--shadowMd)}
+.ios-banner.show{display:flex;gap:12px;align-items:flex-start;animation:slideUp .3s ease}
+.ios-banner-icon{font-size:28px;flex-shrink:0}
+.ios-banner-text{flex:1}
+.ios-banner-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
+.ios-banner-sub{font-size:11px;color:rgba(255,255,255,.55);line-height:1.5}
+.ios-banner-close{color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0 4px;background:none;border:none;flex-shrink:0}
 .toast{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 22px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;letter-spacing:.2px;max-width:92vw;text-align:center}
 .toast.show{opacity:1}
 .modal-overlay{position:fixed;inset:0;background:rgba(18,21,61,.55);z-index:200;display:none;align-items:flex-end}
@@ -671,6 +684,21 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
 
 <button class="fab" id="fab" onclick="openAddForm()">+</button>
 
+<!-- Install Button (Android/Desktop) -->
+<button class="install-btn" id="install-btn" onclick="triggerInstall()">
+  📲 Install App
+</button>
+
+<!-- iOS Install Banner -->
+<div class="ios-banner" id="ios-banner">
+  <div class="ios-banner-icon">📱</div>
+  <div class="ios-banner-text">
+    <div class="ios-banner-title">Install PropBook on iPhone</div>
+    <div class="ios-banner-sub">Tap <b style="color:#fff">Share</b> <span style="font-size:13px">⬆️</span> then <b style="color:#fff">"Add to Home Screen"</b> to install</div>
+  </div>
+  <button class="ios-banner-close" onclick="dismissIOSBanner()">✕</button>
+</div>
+
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="switchView('dashboard')" id="nav-dashboard">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -715,6 +743,23 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
       <button class="share-opt" onclick="copyText()"><div class="s-icon" style="background:var(--blueL)">📋</div><div class="s-label" id="sh-copy-lbl">Copy</div></button>
       <button class="share-opt" onclick="shareSMS()"><div class="s-icon" style="background:#EDE9FE">💌</div><div class="s-label">SMS</div></button>
       <button class="share-opt" onclick="nativeShare()"><div class="s-icon" style="background:var(--goldL)">📱</div><div class="s-label" id="sh-more-lbl">More</div></button>
+    </div>
+    <!-- PDF Section -->
+    <div style="background:var(--cream);border-radius:var(--radiusSm);padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px">📄 PDF Presentation</div>
+      <div style="font-size:12px;color:var(--textS);margin-bottom:10px;line-height:1.6">Professional property brochure with photos, details and your contact — ready to share!</div>
+      <button class="btn btn-primary" id="pdf-btn" onclick="generatePDF()" style="margin-bottom:0">
+        <span id="pdf-btn-text">📄 Generate PDF Brochure</span>
+      </button>
+    </div>
+    <!-- Share App Section -->
+    <div style="background:var(--cream);border-radius:var(--radiusSm);padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px">🚀 Share PropBook App</div>
+      <div style="font-size:12px;color:var(--textS);margin-bottom:10px;line-height:1.6">Apne agent doston ko PropBook share karo — free hai!</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="shareAppWhatsApp()" style="width:100%;padding:10px 6px;font-size:12px">💬 WhatsApp pe Share</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyAppLink()" style="width:100%;padding:10px 6px;font-size:12px">🔗 Link Copy Karo</button>
+      </div>
     </div>
     <div style="font-size:11px;font-weight:700;color:var(--textH);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px" id="share-preview-lbl">Message Preview</div>
     <div class="preview-box" id="share-preview"></div>
@@ -765,7 +810,15 @@ function hideAllScreens(){
 function showConfigScreen(){hideAllScreens();document.getElementById('screen-config').classList.remove('hidden');}
 function showLoginScreen(){hideAllScreens();document.getElementById('screen-login').classList.remove('hidden');}
 function showLoadingScreen(){hideAllScreens();document.getElementById('screen-loading').classList.remove('hidden');}
-function showMainApp(){hideAllScreens();document.getElementById('main-app').style.display='block';}
+function showMainApp(){
+  hideAllScreens();
+  document.getElementById('main-app').style.display='block';
+  // Show install button if prompt available
+  if(_installPrompt){
+    const btn=document.getElementById('install-btn');
+    if(btn)btn.classList.add('show');
+  }
+}
 function showPINEntry(){
   hideAllScreens();
   pinEntry='';updatePINDots();
@@ -791,6 +844,7 @@ function launchApp(){
   loadCloudinaryConfig();
   applyI18n();
   renderDashboard();
+  checkIOSInstall();
   if(!isPINSet()){showPINSetup();}
   else{showPINEntry();}
 }
@@ -1591,6 +1645,214 @@ function shareSMS(){window.open('sms:?body='+encodeURIComponent(buildShareText()
 function copyText(){navigator.clipboard.writeText(buildShareText()).then(()=>{showToast(t('toastCopied'));document.getElementById('share-modal').classList.remove('show');}).catch(()=>showToast(t('toastCopyFail')));}
 async function nativeShare(){const text=buildShareText();if(navigator.share){try{await navigator.share({title:'Property Details',text});document.getElementById('share-modal').classList.remove('show');}catch(e){if(e.name!=='AbortError')copyText();}}else copyText();}
 
+// ===== APP SHARE =====
+function shareAppWhatsApp(){
+  const msg=`🏡 *PropBook* — Free Property Manager App for Real Estate Agents!\n\n✅ Add properties with photos & videos\n✅ WhatsApp share with one tap\n✅ PDF brochure generate karo\n✅ Cloud backup — data safe\n✅ 9 Indian languages\n\n👉 Open karo: https://diamondcattoon-cmd.github.io/propbook/\n\n_Bilkul free hai — try karo!_`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg));
+}
+function copyAppLink(){
+  navigator.clipboard.writeText('https://diamondcattoon-cmd.github.io/propbook/').then(()=>showToast('✅ App link copied!')).catch(()=>showToast('Link: diamondcattoon-cmd.github.io/propbook'));
+}
+
+// ===== PDF GENERATION =====
+async function generatePDF(){
+  const p=properties.find(x=>x.id===currentDetailId);
+  if(!p){showToast('❌ Property not found');return;}
+  const btn=document.getElementById('pdf-btn');
+  const btnTxt=document.getElementById('pdf-btn-text');
+  btn.disabled=true;btnTxt.textContent='⏳ Generating PDF...';
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=210,H=297;
+    const navy=[18,21,61],gold=[201,146,42],cream=[247,244,238],white=[255,255,255],textS=[92,96,128];
+
+    // ===== PAGE 1: COVER =====
+    // Navy header bar
+    doc.setFillColor(...navy);
+    doc.rect(0,0,W,52,'F');
+    // PropBook logo
+    doc.setTextColor(...gold);
+    doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('PropBook',14,13);
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('PROPERTY MANAGER',14,18);
+    // Property type badge
+    const typeLabel={zameen:'Land',flat:'Flat',makaan:'House',commercial:'Commercial',khet:'Farm',plot:'Plot'};
+    const tLabel=typeLabel[p.type]||p.type;
+    doc.setFillColor(...gold);
+    doc.roundedRect(W-14-doc.getTextWidth(tLabel)-10,8,doc.getTextWidth(tLabel)+10,8,2,2,'F');
+    doc.setTextColor(...navy);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text(tLabel.toUpperCase(),W-14-doc.getTextWidth(tLabel)-5,13.5);
+
+    // Property photo
+    const photos=(p.media||[]).filter(m=>m.type==='photo');
+    if(photos.length>0&&photos[0].url){
+      try{
+        const imgData=await urlToBase64(photos[0].url);
+        doc.addImage(imgData,'JPEG',0,52,W,90);
+      }catch(e){
+        doc.setFillColor(...cream);doc.rect(0,52,W,90,'F');
+        doc.setTextColor(...textS);doc.setFontSize(30);doc.text('🏡',W/2,100,{align:'center'});
+      }
+    }else{
+      doc.setFillColor(...cream);doc.rect(0,52,W,90,'F');
+      doc.setTextColor(...textS);doc.setFontSize(40);doc.text('🏡',W/2,105,{align:'center'});
+    }
+
+    // Dark overlay on photo bottom
+    doc.setFillColor(18,21,61);
+    doc.setGState(new doc.GState({opacity:0.6}));
+    doc.rect(0,118,W,24,'F');
+    doc.setGState(new doc.GState({opacity:1}));
+
+    // Price on photo
+    doc.setTextColor(...white);
+    doc.setFontSize(22);doc.setFont('helvetica','bold');
+    const priceDisp=fmtPrice(p.price,p.priceUnit);
+    doc.text('₹'+p.price+' '+(p.priceUnit||''),14,131);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.setTextColor(255,255,255);
+    const puMap={lakh:'Lakh',crore:'Crore',thousand:'Thousand',sqft:'per Sq.Ft.',bigha:'per Bigha'};
+    // Status badge on photo
+    const stColors={available:[30,122,78],negotiating:[184,110,0],sold:[217,64,64],rented:[29,91,181]};
+    const stLabel={available:'AVAILABLE',negotiating:'NEGOTIATING',sold:'SOLD',rented:'RENTED'};
+    const stC=stColors[p.status]||[30,122,78];
+    doc.setFillColor(...stC);
+    doc.roundedRect(W-55,120,42,10,2,2,'F');
+    doc.setTextColor(...white);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text(stLabel[p.status]||p.status.toUpperCase(),W-34,126.5,{align:'center'});
+
+    // Title & Location
+    doc.setTextColor(...navy);
+    doc.setFontSize(18);doc.setFont('helvetica','bold');
+    doc.text(p.title,14,154,{maxWidth:W-28});
+    const titleH=p.title.length>40?12:8;
+    doc.setFontSize(10);doc.setFont('helvetica','normal');
+    doc.setTextColor(...textS);
+    doc.text('📍 '+p.location,14,154+titleH+4,{maxWidth:W-28});
+
+    // Details grid
+    const detailY=154+titleH+16;
+    doc.setFillColor(...cream);
+    doc.roundedRect(14,detailY,W-28,28,3,3,'F');
+    const details=[];
+    if(p.area)details.push({k:'Area',v:p.area+' '+(p.areaUnit||'')});
+    details.push({k:'Type',v:tLabel});
+    details.push({k:'Status',v:stLabel[p.status]||p.status});
+    if(p.description||p.desc)details.push({k:'',v:''});
+    const colW=(W-28)/3;
+    details.slice(0,3).forEach((d,i)=>{
+      const cx=14+i*colW+colW/2;
+      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...textS);
+      doc.text(d.k.toUpperCase(),cx,detailY+9,{align:'center'});
+      doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
+      doc.text(d.v,cx,detailY+18,{align:'center'});
+    });
+
+    // Description
+    let curY=detailY+36;
+    if(p.description||p.desc){
+      doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
+      doc.text('About this Property',14,curY);
+      curY+=6;
+      doc.setFont('helvetica','normal');doc.setTextColor(...textS);doc.setFontSize(9);
+      const descLines=doc.splitTextToSize(p.description||p.desc,W-28);
+      doc.text(descLines,14,curY);
+      curY+=descLines.length*5+6;
+    }
+
+    // Photos grid (up to 3 more photos)
+    const extraPhotos=photos.slice(1,4);
+    if(extraPhotos.length>0){
+      curY=Math.max(curY,detailY+50);
+      if(curY<H-60){
+        doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
+        doc.text('Property Photos',14,curY);curY+=6;
+        const pw=(W-28-8)/Math.min(extraPhotos.length,3);
+        for(let i=0;i<Math.min(extraPhotos.length,3);i++){
+          try{
+            const imgD=await urlToBase64(extraPhotos[i].url);
+            doc.addImage(imgD,'JPEG',14+i*(pw+4),curY,pw,pw*0.7);
+          }catch(e){}
+        }
+        curY+=pw*0.7+8;
+      }
+    }
+
+    // ===== AGENT CONTACT FOOTER =====
+    const footerY=H-38;
+    doc.setFillColor(...navy);
+    doc.rect(0,footerY,W,38,'F');
+    // Gold line
+    doc.setFillColor(...gold);
+    doc.rect(0,footerY,W,1.5,'F');
+    const a=getAgentProfile();
+    if(a.name){
+      doc.setTextColor(...white);
+      doc.setFontSize(11);doc.setFont('helvetica','bold');
+      doc.text(a.name,14,footerY+12);
+      if(a.company){
+        doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(...gold);
+        doc.text(a.company,14,footerY+19);
+      }
+      doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(200,200,220);
+      doc.text('📞 '+a.phone,14,footerY+(a.company?27:22));
+      if(a.wa&&a.wa!==a.phone){
+        doc.text('💬 '+a.wa,14,footerY+(a.company?33:29));
+      }
+    }
+    // PropBook branding right side
+    doc.setTextColor(...gold);doc.setFontSize(14);doc.setFont('helvetica','bold');
+    doc.text('PropBook',W-14,footerY+14,{align:'right'});
+    doc.setTextColor(150,155,200);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('Professional Property Manager',W-14,footerY+21,{align:'right'});
+
+    // ===== PAGE 2: If more photos =====
+    const morePhotos=photos.slice(4);
+    if(morePhotos.length>0){
+      doc.addPage();
+      doc.setFillColor(...navy);doc.rect(0,0,W,16,'F');
+      doc.setTextColor(...gold);doc.setFontSize(9);doc.setFont('helvetica','bold');
+      doc.text('PropBook',14,10);
+      doc.setTextColor(200,200,220);doc.setFontSize(8);
+      doc.text(p.title,W/2,10,{align:'center'});
+      let py=24;
+      const pw2=(W-28-4)/2;
+      for(let i=0;i<morePhotos.length;i++){
+        try{
+          const imgD=await urlToBase64(morePhotos[i].url);
+          const col=i%2;const row=Math.floor(i/2);
+          const imgY=py+row*(pw2*0.75+6);
+          if(imgY+pw2*0.75>H-20)break;
+          doc.addImage(imgD,'JPEG',14+col*(pw2+4),imgY,pw2,pw2*0.75);
+        }catch(e){}
+      }
+    }
+
+    // Save PDF
+    const fname=(p.title||'Property').replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+    doc.save(`PropBook_${fname}.pdf`);
+    showToast('✅ PDF downloaded!');
+  }catch(err){
+    console.error('PDF error',err);
+    showToast('❌ PDF failed: '+err.message);
+  }
+  btn.disabled=false;btnTxt.textContent='📄 Generate PDF Brochure';
+}
+
+async function urlToBase64(url){
+  const res=await fetch(url);
+  const blob=await res.blob();
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 function exportData(){if(!properties.length){showToast(t('toastNoExport'));return;}const blob=new Blob([JSON.stringify(properties,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='PropBook_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);showToast(t('toastExported'));}
 function handleImport(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async ev=>{try{const imported=JSON.parse(ev.target.result);if(!Array.isArray(imported))throw new Error('Invalid');let added=0;for(const p of imported){if(!properties.find(x=>x.id===p.id)){await dbPut(p);properties.unshift(p);added++;}}renderDashboard();showToast('✅ '+added+t('toastImported'));}catch{showToast(t('toastImportErr'));}};reader.readAsText(file);e.target.value='';}
 
@@ -1744,8 +2006,121 @@ function changePIN(){
 const _origPinPress=pinPress;
 // (handled inline in pinPress via _pinChangeMode flag - see pinPress enhanced below)
 
+// ===== PWA INSTALL =====
+let _installPrompt = null;
+
+// Listen for install prompt (Android/Desktop Chrome)
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _installPrompt = e;
+  // Show install button only in main app
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.classList.add('show');
+});
+
+// Hide install button after install
+window.addEventListener('appinstalled', () => {
+  _installPrompt = null;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.classList.remove('show');
+  showToast('🎉 PropBook installed!');
+});
+
+async function triggerInstall() {
+  if (_installPrompt) {
+    _installPrompt.prompt();
+    const { outcome } = await _installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      _installPrompt = null;
+      document.getElementById('install-btn').classList.remove('show');
+    }
+  } else {
+    // Fallback — show instructions
+    showInstallInstructions();
+  }
+}
+
+function showInstallInstructions() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid = /android/i.test(navigator.userAgent);
+  if (isIOS) {
+    document.getElementById('ios-banner').classList.add('show');
+  } else if (isAndroid) {
+    alert('📱 Install PropBook:\n\nChrome browser mein:\n1. Upar right corner mein ⋮ (3 dots) dabao\n2. "Add to Home Screen" select karo\n3. "Install" dabao\n\n✅ PropBook app ki tarah install ho jaayega!');
+  } else {
+    alert('💻 Install PropBook on Desktop:\n\nChrome browser mein:\n1. Address bar ke right mein 📥 icon click karo\n2. "Install PropBook" click karo\n\nYa browser menu (⋮) → "Install PropBook"');
+  }
+}
+
+function dismissIOSBanner() {
+  document.getElementById('ios-banner').classList.remove('show');
+  localStorage.setItem('pb_ios_dismissed', '1');
+}
+
+function checkIOSInstall() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const dismissed = localStorage.getItem('pb_ios_dismissed');
+  if (isIOS && !isStandalone && !dismissed) {
+    setTimeout(() => {
+      document.getElementById('ios-banner').classList.add('show');
+    }, 3000);
+  }
+}
+
+// Register inline service worker for PWA
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+const CACHE = 'propbook-v1';
+const URLS = ['/propbook/'];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+});`;
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl, { scope: '/propbook/' })
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW error', e));
+  }
+}
+
+// Inject manifest dynamically
+function injectManifest() {
+  const manifest = {
+    name: 'PropBook',
+    short_name: 'PropBook',
+    description: 'Professional Property Manager for Real Estate Agents',
+    start_url: '/propbook/',
+    display: 'standalone',
+    background_color: '#12153D',
+    theme_color: '#12153D',
+    orientation: 'portrait',
+    icons: [
+      { src: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3e1.png', sizes: '72x72', type: 'image/png' },
+      { src: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3e1.png', sizes: '192x192', type: 'image/png' },
+      { src: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3e1.png', sizes: '512x512', type: 'image/png' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.querySelector('link[rel="manifest"]');
+  if (link) link.href = url;
+}
+
 // ===== INIT =====
 async function init(){
+  injectManifest();
+  registerSW();
   if(!initSupabase()){showConfigScreen();return;}
   showLoadingScreen();
   if(sbClient){
