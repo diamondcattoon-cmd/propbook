@@ -312,8 +312,8 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
   <div class="auth-logo">Prop<span>Book</span></div>
   <div class="auth-tagline">Welcome to PropBook</div>
   <div class="auth-card" style="max-height:80vh;overflow-y:auto">
-    <div class="auth-card-title">👤 Your Agent Profile</div>
-    <div class="auth-card-sub">Yeh details share message aur PDF mein dikhegi — buyers aapko contact karenge</div>
+    <div class="auth-card-title">👤 Your Profile</div>
+    <div class="auth-card-sub">Yeh details share message aur PDF mein dikhegi</div>
     <div class="form-group">
       <label class="form-label" style="color:rgba(255,255,255,.5)">Your Name *</label>
       <input class="auth-input" id="cfg-agent-name" placeholder="Aapka naam">
@@ -323,7 +323,7 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
       <input class="auth-input" id="cfg-agent-phone" placeholder="9876543210" type="tel">
     </div>
     <div class="form-group">
-      <label class="form-label" style="color:rgba(255,255,255,.5)">WhatsApp Number (optional)</label>
+      <label class="form-label" style="color:rgba(255,255,255,.5)">WhatsApp (optional)</label>
       <input class="auth-input" id="cfg-agent-wa" placeholder="Same as phone or different" type="tel">
     </div>
     <div class="form-group">
@@ -332,17 +332,8 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
     </div>
     <input type="hidden" id="cfg-url" value="">
     <input type="hidden" id="cfg-key" value="">
-    <div style="border-top:1px solid rgba(255,255,255,.1);margin:16px 0;padding-top:16px">
-      <div style="font-size:12px;color:rgba(255,255,255,.35);margin-bottom:10px">📷 Cloudinary — Photos/Videos cloud storage (optional)</div>
-      <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.4)">Cloud Name</label>
-        <input class="auth-input" id="cfg-cld-name" placeholder="your-cloud-name" style="opacity:.7">
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="color:rgba(255,255,255,.4)">Upload Preset</label>
-        <input class="auth-input" id="cfg-cld-preset" placeholder="propbook_upload" style="opacity:.7">
-      </div>
-    </div>
+    <input type="hidden" id="cfg-cld-name" value="ddtntojgr">
+    <input type="hidden" id="cfg-cld-preset" value="propbook_upload">
     <button class="auth-btn" id="cfg-save-btn" onclick="saveConfig()">Get Started →</button>
     <div class="auth-small" onclick="useDemoMode()">⚡ Try Demo Mode (data on this device only)</div>
   </div>
@@ -2145,3 +2136,21 @@ async function init(){
   }, 6000);
 
   if(sbClient){
+    sbClient.auth.onAuthStateChange(async(event,session)=>{
+      if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!currentUser){
+        clearTimeout(loadingTimeout);
+        currentUser=session.user;
+        try{ properties=await dbGetAll(); }catch(e){ properties=[]; }
+        launchApp();
+      }
+      if(event==='SIGNED_OUT'){ currentUser=null; properties=[]; showLoginScreen(); }
+    });
+  }
+
+  try{
+    const {data:{session},error}=await sbClient.auth.getSession();
+    clearTimeout(loadingTimeout);
+    if(error) throw error;
+    if(session){
+      currentUser=session.user;
+      try{ properties=await dbG
