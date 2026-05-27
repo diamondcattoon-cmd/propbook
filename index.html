@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{
   --navy:#12153D;--navy2:#1C2154;--navy3:#252B6B;
@@ -334,7 +334,7 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
     <input type="hidden" id="cfg-key" value="">
     <input type="hidden" id="cfg-cld-name" value="ddtntojgr">
     <input type="hidden" id="cfg-cld-preset" value="propbook_upload">
-    <button class="auth-btn" id="cfg-save-btn" onclick="saveConfig()">Get Started →</button>
+    <button class="auth-btn" id="cfg-save-btn" onclick="if(typeof saveConfig==='function'){saveConfig();}else{alert('Loading... please wait and try again');}">Get Started →</button>
     <div class="auth-small" onclick="useDemoMode()">⚡ Try Demo Mode (data on this device only)</div>
   </div>
 </div>
@@ -2150,7 +2150,4 @@ async function init(){
   try{
     const {data:{session},error}=await sbClient.auth.getSession();
     clearTimeout(loadingTimeout);
-    if(error) throw error;
-    if(session){
-      currentUser=session.user;
-      try{ properties=await dbG
+    if(error) throw err
