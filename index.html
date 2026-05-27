@@ -30,7 +30,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overscroll-behavior:none}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;padding-bottom:82px}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;padding-bottom:100px}
 .topbar{background:var(--navy);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo-wrap{display:flex;flex-direction:column}
 .logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:-.3px;line-height:1}
@@ -721,31 +721,39 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.5}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="share-title">Share Property</div>
-    <div class="modal-sub" id="share-sub">Where to share?</div>
-    <div class="share-grid">
-      <button class="share-opt" onclick="shareWhatsApp()"><div class="s-icon" style="background:#DCF8C6">💬</div><div class="s-label">WhatsApp</div></button>
-      <button class="share-opt" onclick="copyText()"><div class="s-icon" style="background:var(--blueL)">📋</div><div class="s-label" id="sh-copy-lbl">Copy</div></button>
-      <button class="share-opt" onclick="shareSMS()"><div class="s-icon" style="background:#EDE9FE">💌</div><div class="s-label">SMS</div></button>
-      <button class="share-opt" onclick="nativeShare()"><div class="s-icon" style="background:var(--goldL)">📱</div><div class="s-label" id="sh-more-lbl">More</div></button>
-    </div>
-    <!-- PDF Section -->
-    <div style="background:var(--cream);border-radius:var(--radiusSm);padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px">📄 PDF Presentation</div>
-      <div style="font-size:12px;color:var(--textS);margin-bottom:10px;line-height:1.6">Professional property brochure with photos, details and your contact — ready to share!</div>
-      <button class="btn btn-primary" id="pdf-btn" onclick="generatePDF()" style="margin-bottom:0">
-        <span id="pdf-btn-text">📄 Generate PDF Brochure</span>
-      </button>
-    </div>
-    <!-- Share App Section -->
-    <div style="background:var(--cream);border-radius:var(--radiusSm);padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px">🚀 Share PropBook App</div>
-      <div style="font-size:12px;color:var(--textS);margin-bottom:10px;line-height:1.6">Apne agent doston ko PropBook share karo — free hai!</div>
+    <div class="modal-sub" id="share-sub">Choose how to share</div>
+    <!-- WhatsApp Options -->
+    <div style="background:#F0FFF4;border-radius:var(--radiusSm);padding:14px;margin-bottom:12px;border:1.5px solid #C6F6D5">
+      <div style="font-size:11px;font-weight:700;color:#25D366;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px">💬 WhatsApp</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button class="btn btn-secondary btn-sm" onclick="shareAppWhatsApp()" style="width:100%;padding:10px 6px;font-size:12px">💬 WhatsApp pe Share</button>
-        <button class="btn btn-secondary btn-sm" onclick="copyAppLink()" style="width:100%;padding:10px 6px;font-size:12px">🔗 Link Copy Karo</button>
+        <button onclick="shareWhatsApp()" style="background:#25D366;color:#fff;border:none;border-radius:var(--radiusSm);padding:12px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:20px">💬</span>
+          <span style="font-size:12px;font-weight:700">Text Message</span>
+          <span style="font-size:10px;opacity:.8">Quick share</span>
+        </button>
+        <button onclick="shareWhatsAppPDF()" style="background:var(--navy);color:#fff;border:none;border-radius:var(--radiusSm);padding:12px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:20px">📄</span>
+          <span style="font-size:12px;font-weight:700">PDF Brochure</span>
+          <span style="font-size:10px;opacity:.8">Professional</span>
+        </button>
       </div>
     </div>
-    <div style="font-size:11px;font-weight:700;color:var(--textH);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px" id="share-preview-lbl">Message Preview</div>
+    <!-- Other options -->
+    <div class="share-grid" style="margin-bottom:12px">
+      <button class="share-opt" onclick="copyText()"><div class="s-icon" style="background:var(--blueL)">📋</div><div class="s-label" id="sh-copy-lbl">Copy</div></button>
+      <button class="share-opt" onclick="shareSMS()"><div class="s-icon" style="background:#EDE9FE">💌</div><div class="s-label">SMS</div></button>
+      <button class="share-opt" onclick="generatePDF()"><div class="s-icon" style="background:#FEF3DC">📥</div><div class="s-label">Save PDF</div></button>
+      <button class="share-opt" onclick="nativeShare()"><div class="s-icon" style="background:var(--goldL)">📱</div><div class="s-label" id="sh-more-lbl">More</div></button>
+    </div>
+    <!-- Share App -->
+    <div style="background:var(--cream);border-radius:var(--radiusSm);padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px">🚀 Share PropBook App</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="shareAppWhatsApp()" style="width:100%;padding:10px 6px;font-size:12px">💬 WhatsApp</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyAppLink()" style="width:100%;padding:10px 6px;font-size:12px">🔗 Copy Link</button>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--textH);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px" id="share-preview-lbl">Message Preview</div>
     <div class="preview-box" id="share-preview"></div>
     <button class="btn btn-secondary" id="share-close-btn" onclick="document.getElementById('share-modal').classList.remove('show')">Close</button>
   </div>
@@ -831,7 +839,7 @@ function launchApp(){
   loadCloudinaryConfig();
   applyI18n();
   renderDashboard();
-  checkIOSInstall();
+  checkAndShowInstall();
   if(!isPINSet()){showPINSetup();}
   else{showPINEntry();}
 }
@@ -1633,15 +1641,20 @@ async function deleteCurrentProp(){if(!confirm(t('deleteConfirm')))return;try{aw
 
 function buildShareText(){
   const p=properties.find(x=>x.id===currentDetailId);if(!p)return'';
+  loadAgentProfile(); // Always reload fresh
   const a=getAgentProfile();
   const yts=(p.media||[]).filter(m=>m.type==='youtube');
-  const typeLabel={zameen:"Land",flat:"Flat",makaan:"House",commercial:"Commercial",khet:"Farm",plot:"Plot"};
-  const statusLabel={available:"Available",negotiating:"Negotiating",sold:"Sold",rented:"Rented"};
-  const agentLine = a.name ? `\n\n🏢 *Contact Agent:*\n👤 ${a.name}${a.company?' ('+a.company+')':''}\n📞 ${a.phone}${a.wa && a.wa!==a.phone?'\n💬 WhatsApp: '+a.wa:''}` : '';
-  return `🏡 *${p.title}*\n\n📍 Type: ${getTypeLabel(p.type)}\n📍 Location: ${p.location}\n${p.area?`📐 Area: ${p.area} ${p.areaUnit}\n`:''}💰 Price: ${fmtPrice(p.price,p.priceUnit)}\n✅ Status: ${getStatusLabel(p.status)}${p.desc?`\n\n📋 ${p.desc}`:''}${yts.length?'\n\n🎬 Videos:\n'+yts.map(y=>`https://youtu.be/${y.ytId}`).join('\n'):''}${agentLine}\n\n_Shared via PropBook 🏡_`;
+  const agentLine = a.name ? `\n\n🏢 *Contact Agent:*\n👤 ${a.name}${a.company?' — '+a.company:''}\n📞 ${a.phone}${a.wa && a.wa!==a.phone?'\n💬 WhatsApp: '+a.wa:''}` : '\n\n📞 Contact for details';
+  return `🏡 *${p.title}*\n\n📍 Type: ${getTypeLabel(p.type)}\n📍 Location: ${p.location}\n${p.area?`📐 Area: ${p.area} ${p.areaUnit}\n`:''}💰 Price: ${fmtPrice(p.price,p.priceUnit)}\n✅ Status: ${getStatusLabel(p.status)}${p.desc||p.description?`\n\n📋 ${p.desc||p.description}`:''}${yts.length?'\n\n🎬 Videos:\n'+yts.map(y=>`https://youtu.be/${y.ytId}`).join('\n'):''}${agentLine}\n\n_Shared via PropBook 🏡_`;
 }
-function openShareModal(){document.getElementById('share-preview').textContent=buildShareText();document.getElementById('share-modal').classList.add('show');}
+function openShareModal(){
+  loadAgentProfile();
+  const txt=buildShareText();
+  document.getElementById('share-preview').textContent=txt;
+  document.getElementById('share-modal').classList.add('show');
+}
 function shareWhatsApp(){window.open('https://wa.me/?text='+encodeURIComponent(buildShareText()));document.getElementById('share-modal').classList.remove('show');}
+function shareWhatsAppPDF(){document.getElementById('share-modal').classList.remove('show');setTimeout(()=>generatePDF(true),200);}
 function shareSMS(){window.open('sms:?body='+encodeURIComponent(buildShareText()));document.getElementById('share-modal').classList.remove('show');}
 function copyText(){navigator.clipboard.writeText(buildShareText()).then(()=>{showToast(t('toastCopied'));document.getElementById('share-modal').classList.remove('show');}).catch(()=>showToast(t('toastCopyFail')));}
 async function nativeShare(){const text=buildShareText();if(navigator.share){try{await navigator.share({title:'Property Details',text});document.getElementById('share-modal').classList.remove('show');}catch(e){if(e.name!=='AbortError')copyText();}}else copyText();}
@@ -1656,191 +1669,173 @@ function copyAppLink(){
 }
 
 // ===== PDF GENERATION =====
-async function generatePDF(){
+async function generatePDF(shareViaWhatsApp=false){
   const p=properties.find(x=>x.id===currentDetailId);
   if(!p){showToast('❌ Property not found');return;}
-  const btn=document.getElementById('pdf-btn');
-  const btnTxt=document.getElementById('pdf-btn-text');
-  btn.disabled=true;btnTxt.textContent='⏳ Generating PDF...';
+  showToast('⏳ Creating PDF...',5000);
   try{
     const {jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
     const W=210,H=297;
-    const navy=[18,21,61],gold=[201,146,42],cream=[247,244,238],white=[255,255,255],textS=[92,96,128];
+    const navy=[18,21,61],gold=[201,146,42],cream=[247,244,238],white=[255,255,255],textS=[92,96,128],textH=[148,153,187];
 
-    // ===== PAGE 1: COVER =====
-    // Navy header bar
+    // ===== HEADER =====
     doc.setFillColor(...navy);
-    doc.rect(0,0,W,52,'F');
-    // PropBook logo
-    doc.setTextColor(...gold);
-    doc.setFontSize(11);doc.setFont('helvetica','bold');
-    doc.text('PropBook',14,13);
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text('PROPERTY MANAGER',14,18);
-    // Property type badge
-    const typeLabel={zameen:'Land',flat:'Flat',makaan:'House',commercial:'Commercial',khet:'Farm',plot:'Plot'};
-    const tLabel=typeLabel[p.type]||p.type;
+    doc.rect(0,0,W,48,'F');
+    // Gold accent line
     doc.setFillColor(...gold);
-    doc.roundedRect(W-14-doc.getTextWidth(tLabel)-10,8,doc.getTextWidth(tLabel)+10,8,2,2,'F');
-    doc.setTextColor(...navy);doc.setFontSize(7);doc.setFont('helvetica','bold');
-    doc.text(tLabel.toUpperCase(),W-14-doc.getTextWidth(tLabel)-5,13.5);
-
-    // Property photo
-    const photos=(p.media||[]).filter(m=>m.type==='photo');
-    if(photos.length>0&&photos[0].url){
-      try{
-        const imgData=await urlToBase64(photos[0].url);
-        doc.addImage(imgData,'JPEG',0,52,W,90);
-      }catch(e){
-        doc.setFillColor(...cream);doc.rect(0,52,W,90,'F');
-        doc.setTextColor(...textS);doc.setFontSize(30);doc.text('🏡',W/2,100,{align:'center'});
-      }
-    }else{
-      doc.setFillColor(...cream);doc.rect(0,52,W,90,'F');
-      doc.setTextColor(...textS);doc.setFontSize(40);doc.text('🏡',W/2,105,{align:'center'});
-    }
-
-    // Dark overlay on photo bottom
-    doc.setFillColor(18,21,61);
-    doc.setGState(new doc.GState({opacity:0.6}));
-    doc.rect(0,118,W,24,'F');
-    doc.setGState(new doc.GState({opacity:1}));
-
-    // Price on photo
+    doc.rect(0,48,W,2,'F');
+    // PropBook logo
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(18);doc.setTextColor(...gold);
+    doc.text('Prop',14,22);
     doc.setTextColor(...white);
-    doc.setFontSize(22);doc.setFont('helvetica','bold');
-    const priceDisp=fmtPrice(p.price,p.priceUnit);
-    doc.text('₹'+p.price+' '+(p.priceUnit||''),14,131);
-    doc.setFontSize(9);doc.setFont('helvetica','normal');
-    doc.setTextColor(255,255,255);
-    const puMap={lakh:'Lakh',crore:'Crore',thousand:'Thousand',sqft:'per Sq.Ft.',bigha:'per Bigha'};
-    // Status badge on photo
+    doc.text('Book',14+doc.getTextWidth('Prop'),22);
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.setTextColor(180,185,220);
+    doc.text('PROPERTY MANAGER',14,29);
+    // Type badge
+    const typeLabel={zameen:'Land',flat:'Flat',makaan:'House',commercial:'Commercial',khet:'Farm',plot:'Plot'};
+    const tLabel=(typeLabel[p.type]||p.type).toUpperCase();
+    doc.setFillColor(...gold);
+    const badgeW=doc.getTextWidth(tLabel)+10;
+    doc.roundedRect(W-14-badgeW,10,badgeW,10,2,2,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
+    doc.text(tLabel,W-14-badgeW/2,16.5,{align:'center'});
+    // Status
     const stColors={available:[30,122,78],negotiating:[184,110,0],sold:[217,64,64],rented:[29,91,181]};
     const stLabel={available:'AVAILABLE',negotiating:'NEGOTIATING',sold:'SOLD',rented:'RENTED'};
     const stC=stColors[p.status]||[30,122,78];
     doc.setFillColor(...stC);
-    doc.roundedRect(W-55,120,42,10,2,2,'F');
-    doc.setTextColor(...white);doc.setFontSize(7);doc.setFont('helvetica','bold');
-    doc.text(stLabel[p.status]||p.status.toUpperCase(),W-34,126.5,{align:'center'});
+    const stW=doc.getTextWidth(stLabel[p.status]||p.status.toUpperCase())+10;
+    doc.roundedRect(W-14-stW,25,stW,10,2,2,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...white);
+    doc.text((stLabel[p.status]||p.status).toUpperCase(),W-14-stW/2,31,{align:'center'});
 
-    // Title & Location
+    // ===== MAIN PHOTO =====
+    const photos=(p.media||[]).filter(m=>m.type==='photo');
+    let photoY=50;
+    if(photos.length>0&&(photos[0].url||photos[0].data)){
+      try{
+        const imgData=await urlToBase64(photos[0].url||photos[0].data);
+        doc.addImage(imgData,'JPEG',0,photoY,W,75,undefined,'FAST');
+        // Gradient overlay bottom
+        doc.setFillColor(...navy);
+        for(let i=0;i<20;i++){
+          doc.setGState(new doc.GState({opacity:(i/20)*0.7}));
+          doc.rect(0,photoY+55+i,W,1,'F');
+        }
+        doc.setGState(new doc.GState({opacity:1}));
+      }catch(e){
+        doc.setFillColor(...cream);doc.rect(0,photoY,W,75,'F');
+        doc.setTextColor(...textS);doc.setFontSize(36);doc.text('🏡',W/2,photoY+42,{align:'center'});
+      }
+    }else{
+      doc.setFillColor(...cream);doc.rect(0,photoY,W,75,'F');
+      doc.setTextColor(...textS);doc.setFontSize(36);doc.text('🏡',W/2,photoY+42,{align:'center'});
+    }
+
+    // Price on photo
+    doc.setTextColor(...white);
+    doc.setFontSize(20);doc.setFont('helvetica','bold');
+    doc.text('₹'+p.price+' '+(p.priceUnit||''),14,photoY+68);
+
+    // ===== PROPERTY TITLE & DETAILS =====
+    let curY=133;
     doc.setTextColor(...navy);
-    doc.setFontSize(18);doc.setFont('helvetica','bold');
-    doc.text(p.title,14,154,{maxWidth:W-28});
-    const titleH=p.title.length>40?12:8;
-    doc.setFontSize(10);doc.setFont('helvetica','normal');
-    doc.setTextColor(...textS);
-    doc.text('📍 '+p.location,14,154+titleH+4,{maxWidth:W-28});
+    doc.setFontSize(16);doc.setFont('helvetica','bold');
+    const titleLines=doc.splitTextToSize(p.title,W-28);
+    doc.text(titleLines,14,curY);
+    curY+=titleLines.length*7+3;
 
-    // Details grid
-    const detailY=154+titleH+16;
-    doc.setFillColor(...cream);
-    doc.roundedRect(14,detailY,W-28,28,3,3,'F');
+    // Location
+    doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(...textS);
+    doc.text('📍 '+p.location,14,curY,{maxWidth:W-28});
+    curY+=7;
+
+    // Details boxes
     const details=[];
     if(p.area)details.push({k:'Area',v:p.area+' '+(p.areaUnit||'')});
-    details.push({k:'Type',v:tLabel});
-    details.push({k:'Status',v:stLabel[p.status]||p.status});
-    if(p.description||p.desc)details.push({k:'',v:''});
-    const colW=(W-28)/3;
-    details.slice(0,3).forEach((d,i)=>{
-      const cx=14+i*colW+colW/2;
-      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...textS);
-      doc.text(d.k.toUpperCase(),cx,detailY+9,{align:'center'});
-      doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
-      doc.text(d.v,cx,detailY+18,{align:'center'});
-    });
+    details.push({k:'Type',v:typeLabel[p.type]||p.type});
+    if(p.status)details.push({k:'Status',v:stLabel[p.status]||p.status});
+    if(details.length>0){
+      const boxW=(W-28)/details.length-2;
+      details.forEach((d,i)=>{
+        const bx=14+i*(boxW+2);
+        doc.setFillColor(...cream);
+        doc.roundedRect(bx,curY,boxW,16,2,2,'F');
+        doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...textH);
+        doc.text(d.k.toUpperCase(),bx+boxW/2,curY+6,{align:'center'});
+        doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
+        doc.text(d.v,bx+boxW/2,curY+13,{align:'center'});
+      });
+      curY+=22;
+    }
 
     // Description
-    let curY=detailY+36;
-    if(p.description||p.desc){
+    if(p.desc||p.description){
+      doc.setDrawColor(...cream);doc.setLineWidth(0.3);
+      doc.line(14,curY,W-14,curY);curY+=5;
       doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
-      doc.text('About this Property',14,curY);
-      curY+=6;
-      doc.setFont('helvetica','normal');doc.setTextColor(...textS);doc.setFontSize(9);
-      const descLines=doc.splitTextToSize(p.description||p.desc,W-28);
-      doc.text(descLines,14,curY);
-      curY+=descLines.length*5+6;
+      doc.text('About this Property',14,curY);curY+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...textS);
+      const descLines=doc.splitTextToSize(p.desc||p.description,W-28);
+      doc.text(descLines.slice(0,4),14,curY);
+      curY+=Math.min(descLines.length,4)*5+4;
     }
 
-    // Photos grid (up to 3 more photos)
+    // Extra photos grid
     const extraPhotos=photos.slice(1,4);
-    if(extraPhotos.length>0){
-      curY=Math.max(curY,detailY+50);
-      if(curY<H-60){
-        doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
-        doc.text('Property Photos',14,curY);curY+=6;
-        const pw=(W-28-8)/Math.min(extraPhotos.length,3);
-        for(let i=0;i<Math.min(extraPhotos.length,3);i++){
-          try{
-            const imgD=await urlToBase64(extraPhotos[i].url);
-            doc.addImage(imgD,'JPEG',14+i*(pw+4),curY,pw,pw*0.7);
-          }catch(e){}
-        }
-        curY+=pw*0.7+8;
-      }
-    }
-
-    // ===== AGENT CONTACT FOOTER =====
-    const footerY=H-38;
-    doc.setFillColor(...navy);
-    doc.rect(0,footerY,W,38,'F');
-    // Gold line
-    doc.setFillColor(...gold);
-    doc.rect(0,footerY,W,1.5,'F');
-    const a=getAgentProfile();
-    if(a.name){
-      doc.setTextColor(...white);
-      doc.setFontSize(11);doc.setFont('helvetica','bold');
-      doc.text(a.name,14,footerY+12);
-      if(a.company){
-        doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(...gold);
-        doc.text(a.company,14,footerY+19);
-      }
-      doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(200,200,220);
-      doc.text('📞 '+a.phone,14,footerY+(a.company?27:22));
-      if(a.wa&&a.wa!==a.phone){
-        doc.text('💬 '+a.wa,14,footerY+(a.company?33:29));
-      }
-    }
-    // PropBook branding right side
-    doc.setTextColor(...gold);doc.setFontSize(14);doc.setFont('helvetica','bold');
-    doc.text('PropBook',W-14,footerY+14,{align:'right'});
-    doc.setTextColor(150,155,200);doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text('Professional Property Manager',W-14,footerY+21,{align:'right'});
-
-    // ===== PAGE 2: If more photos =====
-    const morePhotos=photos.slice(4);
-    if(morePhotos.length>0){
-      doc.addPage();
-      doc.setFillColor(...navy);doc.rect(0,0,W,16,'F');
-      doc.setTextColor(...gold);doc.setFontSize(9);doc.setFont('helvetica','bold');
-      doc.text('PropBook',14,10);
-      doc.setTextColor(200,200,220);doc.setFontSize(8);
-      doc.text(p.title,W/2,10,{align:'center'});
-      let py=24;
-      const pw2=(W-28-4)/2;
-      for(let i=0;i<morePhotos.length;i++){
+    if(extraPhotos.length>0&&curY<H-70){
+      doc.setDrawColor(...cream);doc.line(14,curY,W-14,curY);curY+=5;
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
+      doc.text('More Photos',14,curY);curY+=5;
+      const pw=(W-28-(extraPhotos.length-1)*4)/extraPhotos.length;
+      for(let i=0;i<extraPhotos.length;i++){
         try{
-          const imgD=await urlToBase64(morePhotos[i].url);
-          const col=i%2;const row=Math.floor(i/2);
-          const imgY=py+row*(pw2*0.75+6);
-          if(imgY+pw2*0.75>H-20)break;
-          doc.addImage(imgD,'JPEG',14+col*(pw2+4),imgY,pw2,pw2*0.75);
+          const imgD=await urlToBase64(extraPhotos[i].url||extraPhotos[i].data);
+          doc.addImage(imgD,'JPEG',14+i*(pw+4),curY,pw,pw*0.65,undefined,'FAST');
         }catch(e){}
       }
     }
 
-    // Save PDF
-    const fname=(p.title||'Property').replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
-    doc.save(`PropBook_${fname}.pdf`);
-    showToast('✅ PDF downloaded!');
+    // ===== AGENT FOOTER =====
+    loadAgentProfile();
+    const a=getAgentProfile();
+    const footerY=H-40;
+    doc.setFillColor(...navy);doc.rect(0,footerY,W,40,'F');
+    doc.setFillColor(...gold);doc.rect(0,footerY,W,1.5,'F');
+    if(a.name){
+      doc.setTextColor(...white);
+      doc.setFontSize(13);doc.setFont('helvetica','bold');
+      doc.text(a.name,14,footerY+12);
+      if(a.company){doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(...gold);doc.text(a.company,14,footerY+19);}
+      doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(200,205,230);
+      doc.text('📞 '+a.phone,14,footerY+(a.company?27:22));
+      if(a.wa&&a.wa!==a.phone)doc.text('💬 '+a.wa,14,footerY+(a.company?33:29));
+    }
+    doc.setTextColor(...gold);doc.setFontSize(13);doc.setFont('helvetica','bold');
+    doc.text('PropBook',W-14,footerY+14,{align:'right'});
+    doc.setTextColor(150,155,200);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('Professional Property Manager',W-14,footerY+21,{align:'right'});
+    doc.text('diamondcattoon-cmd.github.io/propbook',W-14,footerY+28,{align:'right'});
+
+    const fname=(p.title||'Property').replace(/[^a-zA-Z0-9]/g,'_').slice(0,25);
+    if(shareViaWhatsApp){
+      // Download PDF then open WhatsApp
+      doc.save(`PropBook_${fname}.pdf`);
+      setTimeout(()=>{
+        window.open('https://wa.me/?text='+encodeURIComponent(`📄 *PropBook Property Brochure*\n\n🏡 ${p.title}\n📍 ${p.location}\n💰 ${fmtPrice(p.price,p.priceUnit)}\n\n${a.name?`📞 ${a.name}: ${a.phone}`:''}\n\nPDF brochure attached ☝️`));
+      },500);
+      showToast('✅ PDF downloaded! Now share via WhatsApp.');
+    }else{
+      doc.save(`PropBook_${fname}.pdf`);
+      showToast('✅ PDF downloaded!');
+    }
   }catch(err){
     console.error('PDF error',err);
-    showToast('❌ PDF failed: '+err.message);
+    showToast('❌ PDF error: '+err.message);
   }
-  btn.disabled=false;btnTxt.textContent='📄 Generate PDF Brochure';
 }
 
 async function urlToBase64(url){
@@ -2010,16 +2005,13 @@ const _origPinPress=pinPress;
 // ===== PWA INSTALL =====
 let _installPrompt = null;
 
-// Listen for install prompt (Android/Desktop Chrome)
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   _installPrompt = e;
-  // Show install button only in main app
   const btn = document.getElementById('install-btn');
   if (btn) btn.classList.add('show');
 });
 
-// Hide install button after install
 window.addEventListener('appinstalled', () => {
   _installPrompt = null;
   const btn = document.getElementById('install-btn');
@@ -2036,7 +2028,6 @@ async function triggerInstall() {
       document.getElementById('install-btn').classList.remove('show');
     }
   } else {
-    // Fallback — show instructions
     showInstallInstructions();
   }
 }
@@ -2047,9 +2038,25 @@ function showInstallInstructions() {
   if (isIOS) {
     document.getElementById('ios-banner').classList.add('show');
   } else if (isAndroid) {
-    alert('📱 Install PropBook:\n\nChrome browser mein:\n1. Upar right corner mein ⋮ (3 dots) dabao\n2. "Add to Home Screen" select karo\n3. "Install" dabao\n\n✅ PropBook app ki tarah install ho jaayega!');
+    alert('📱 PropBook Install Karo:\n\nChrome browser mein:\n1. Upar right corner mein ⋮ (3 dots) dabao\n2. "Add to Home Screen" select karo\n3. "Add" dabao\n\n✅ PropBook app ki tarah install ho jaayega!');
   } else {
-    alert('💻 Install PropBook on Desktop:\n\nChrome browser mein:\n1. Address bar ke right mein 📥 icon click karo\n2. "Install PropBook" click karo\n\nYa browser menu (⋮) → "Install PropBook"');
+    alert('💻 Desktop par Install:\n\nChrome browser mein:\n1. Address bar ke right mein 💾 icon click karo\n2. "Install PropBook" click karo');
+  }
+}
+
+function checkAndShowInstall() {
+  // Always show install button on mobile if not standalone
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (!isStandalone && isMobile) {
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.classList.add('show');
+    if (isIOS && !localStorage.getItem('pb_ios_dismissed')) {
+      setTimeout(() => {
+        document.getElementById('ios-banner').classList.add('show');
+      }, 3000);
+    }
   }
 }
 
@@ -2138,35 +2145,3 @@ async function init(){
   }, 6000);
 
   if(sbClient){
-    sbClient.auth.onAuthStateChange(async(event,session)=>{
-      if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!currentUser){
-        clearTimeout(loadingTimeout);
-        currentUser=session.user;
-        try{ properties=await dbGetAll(); }catch(e){ properties=[]; }
-        launchApp();
-      }
-      if(event==='SIGNED_OUT'){ currentUser=null; properties=[]; showLoginScreen(); }
-    });
-  }
-
-  try{
-    const {data:{session},error}=await sbClient.auth.getSession();
-    clearTimeout(loadingTimeout);
-    if(error) throw error;
-    if(session){
-      currentUser=session.user;
-      try{ properties=await dbGetAll(); }catch(e){ properties=[]; }
-      launchApp();
-    }else{
-      showLoginScreen();
-    }
-  }catch(e){
-    clearTimeout(loadingTimeout);
-    console.error('Init error',e);
-    showLoginScreen();
-  }
-}
-init();
-</script>
-</body>
-</html>
