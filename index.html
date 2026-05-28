@@ -12,7 +12,6 @@
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{
   --navy:#12153D;--navy2:#1C2154;--navy3:#252B6B;
@@ -1663,169 +1662,118 @@ function copyAppLink(){
 async function generatePDF(shareViaWhatsApp=false){
   const p=properties.find(x=>x.id===currentDetailId);
   if(!p){showToast('❌ Property not found');return;}
-  showToast('⏳ Creating PDF...',5000);
-  try{
-    const {jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-    const W=210,H=297;
-    const navy=[18,21,61],gold=[201,146,42],cream=[247,244,238],white=[255,255,255],textS=[92,96,128],textH=[148,153,187];
+  loadAgentProfile();
+  const a=getAgentProfile();
+  const photos=(p.media||[]).filter(m=>m.type==='photo');
+  const yts=(p.media||[]).filter(m=>m.type==='youtube');
+  const typeLabel={zameen:'Land',flat:'Flat',makaan:'House',commercial:'Commercial',khet:'Farm',plot:'Plot'};
+  const stLabel={available:'Available',negotiating:'Negotiating',sold:'Sold',rented:'Rented'};
+  const stColor={available:'#1E7A4E',negotiating:'#B86E00',sold:'#D94040',rented:'#1D5BB5'};
 
-    // ===== HEADER =====
-    doc.setFillColor(...navy);
-    doc.rect(0,0,W,48,'F');
-    // Gold accent line
-    doc.setFillColor(...gold);
-    doc.rect(0,48,W,2,'F');
-    // PropBook logo
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(18);doc.setTextColor(...gold);
-    doc.text('Prop',14,22);
-    doc.setTextColor(...white);
-    doc.text('Book',14+doc.getTextWidth('Prop'),22);
-    doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.setTextColor(180,185,220);
-    doc.text('PROPERTY MANAGER',14,29);
-    // Type badge
-    const typeLabel={zameen:'Land',flat:'Flat',makaan:'House',commercial:'Commercial',khet:'Farm',plot:'Plot'};
-    const tLabel=(typeLabel[p.type]||p.type).toUpperCase();
-    doc.setFillColor(...gold);
-    const badgeW=doc.getTextWidth(tLabel)+10;
-    doc.roundedRect(W-14-badgeW,10,badgeW,10,2,2,'F');
-    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
-    doc.text(tLabel,W-14-badgeW/2,16.5,{align:'center'});
-    // Status
-    const stColors={available:[30,122,78],negotiating:[184,110,0],sold:[217,64,64],rented:[29,91,181]};
-    const stLabel={available:'AVAILABLE',negotiating:'NEGOTIATING',sold:'SOLD',rented:'RENTED'};
-    const stC=stColors[p.status]||[30,122,78];
-    doc.setFillColor(...stC);
-    const stW=doc.getTextWidth(stLabel[p.status]||p.status.toUpperCase())+10;
-    doc.roundedRect(W-14-stW,25,stW,10,2,2,'F');
-    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...white);
-    doc.text((stLabel[p.status]||p.status).toUpperCase(),W-14-stW/2,31,{align:'center'});
+  // Build print window
+  const w=window.open('','_blank','width=800,height=1000,scrollbars=yes');
+  if(!w){showToast('❌ Popup blocked! Allow popups and try again.');return;}
 
-    // ===== MAIN PHOTO =====
-    const photos=(p.media||[]).filter(m=>m.type==='photo');
-    let photoY=50;
-    if(photos.length>0&&(photos[0].url||photos[0].data)){
-      try{
-        const imgData=await urlToBase64(photos[0].url||photos[0].data);
-        doc.addImage(imgData,'JPEG',0,photoY,W,75,undefined,'FAST');
-        // Gradient overlay bottom
-        doc.setFillColor(...navy);
-        for(let i=0;i<20;i++){
-          doc.setGState(new doc.GState({opacity:(i/20)*0.7}));
-          doc.rect(0,photoY+55+i,W,1,'F');
-        }
-        doc.setGState(new doc.GState({opacity:1}));
-      }catch(e){
-        doc.setFillColor(...cream);doc.rect(0,photoY,W,75,'F');
-        doc.setTextColor(...textS);doc.setFontSize(36);doc.text('🏡',W/2,photoY+42,{align:'center'});
-      }
-    }else{
-      doc.setFillColor(...cream);doc.rect(0,photoY,W,75,'F');
-      doc.setTextColor(...textS);doc.setFontSize(36);doc.text('🏡',W/2,photoY+42,{align:'center'});
-    }
+  let photosHTML='';
+  if(photos.length>0){
+    const src=photos[0].url||photos[0].data||'';
+    photosHTML+=`<div class="cover-photo"><img src="${src}" onerror="this.style.display='none'"></div>`;
+  }
+  let extraPhotos='';
+  if(photos.length>1){
+    extraPhotos=`<div class="photo-grid">${photos.slice(1,4).map(ph=>`<img src="${ph.url||ph.data||''}" onerror="this.style.display='none'">`).join('')}</div>`;
+  }
 
-    // Price on photo
-    doc.setTextColor(...white);
-    doc.setFontSize(20);doc.setFont('helvetica','bold');
-    doc.text('₹'+p.price+' '+(p.priceUnit||''),14,photoY+68);
+  w.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PropBook — ${p.title}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#12153D;width:210mm;margin:0 auto}
+  .header{background:#12153D;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+  .logo{font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px}.logo span{color:#C9922A}
+  .type-badge{background:#C9922A;color:#12153D;font-size:10px;font-weight:800;padding:5px 12px;border-radius:20px;letter-spacing:1px}
+  .cover-photo{width:100%;height:200px;overflow:hidden;background:#EDE9E0}
+  .cover-photo img{width:100%;height:100%;object-fit:cover}
+  .status-bar{background:#F7F4EE;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #EDE9E0}
+  .price{font-size:28px;font-weight:900;color:#12153D;font-family:Georgia,serif}
+  .status-pill{padding:6px 16px;border-radius:20px;font-size:11px;font-weight:800;color:#fff;letter-spacing:1px}
+  .main{padding:20px 24px}
+  .prop-title{font-size:22px;font-weight:900;color:#12153D;margin-bottom:6px;font-family:Georgia,serif}
+  .location{font-size:13px;color:#5C6080;margin-bottom:16px}
+  .details-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .detail-box{background:#F7F4EE;border-radius:8px;padding:12px;text-align:center}
+  .detail-box .key{font-size:10px;color:#9499BB;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+  .detail-box .val{font-size:14px;color:#12153D;font-weight:800}
+  .desc-section{margin-bottom:16px}
+  .section-title{font-size:11px;font-weight:800;color:#C9922A;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #F5E6C8}
+  .desc-text{font-size:13px;color:#5C6080;line-height:1.7}
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+  .photo-grid img{width:100%;height:80px;object-fit:cover;border-radius:6px}
+  .footer{background:#12153D;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .agent-name{font-size:16px;font-weight:800;color:#fff}
+  .agent-company{font-size:11px;color:#C9922A;margin-top:2px}
+  .agent-phone{font-size:13px;color:rgba(255,255,255,.7);margin-top:4px}
+  .pb-brand{text-align:right}
+  .pb-brand .name{font-size:18px;font-weight:900;color:#C9922A}
+  .pb-brand .sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+  @media print{
+    body{width:100%}
+    @page{margin:0;size:A4}
+    .no-print{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">Prop<span>Book</span></div>
+  <div class="type-badge">${(typeLabel[p.type]||p.type).toUpperCase()}</div>
+</div>
+${photosHTML}
+<div class="status-bar">
+  <div class="price">₹${p.price} ${p.priceUnit||''}</div>
+  <div class="status-pill" style="background:${stColor[p.status]||'#1E7A4E'}">${(stLabel[p.status]||p.status).toUpperCase()}</div>
+</div>
+<div class="main">
+  <div class="prop-title">${p.title}</div>
+  <div class="location">📍 ${p.location}</div>
+  <div class="details-grid">
+    ${p.area?`<div class="detail-box"><div class="key">Area</div><div class="val">${p.area} ${p.areaUnit||''}</div></div>`:''}
+    <div class="detail-box"><div class="key">Type</div><div class="val">${typeLabel[p.type]||p.type}</div></div>
+    <div class="detail-box"><div class="key">Status</div><div class="val">${stLabel[p.status]||p.status}</div></div>
+  </div>
+  ${p.desc||p.description?`<div class="desc-section"><div class="section-title">About this Property</div><div class="desc-text">${p.desc||p.description}</div></div>`:''}
+  ${extraPhotos?`<div class="section-title" style="margin-bottom:8px">More Photos</div>${extraPhotos}`:''}
+  ${yts.length?`<div class="desc-section"><div class="section-title">Videos</div>${yts.map(y=>`<div style="font-size:12px;color:#1D5BB5;margin-top:4px">▶ https://youtu.be/${y.ytId}</div>`).join('')}</div>`:''}
+</div>
+<div class="footer">
+  <div>
+    ${a.name?`<div class="agent-name">${a.name}</div>`:''}
+    ${a.company?`<div class="agent-company">${a.company}</div>`:''}
+    ${a.phone?`<div class="agent-phone">📞 ${a.phone}${a.wa&&a.wa!==a.phone?' · 💬 '+a.wa:''}</div>`:''}
+  </div>
+  <div class="pb-brand">
+    <div class="name">PropBook</div>
+    <div class="sub">Property Manager</div>
+  </div>
+</div>
+<div class="no-print" style="text-align:center;padding:20px;background:#F7F4EE">
+  <p style="font-size:13px;color:#5C6080;margin-bottom:12px">📄 Click Print to save as PDF</p>
+  <button onclick="window.print()" style="background:#12153D;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">🖨️ Print / Save as PDF</button>
+</div>
+</body>
+</html>`);
+  w.document.close();
 
-    // ===== PROPERTY TITLE & DETAILS =====
-    let curY=133;
-    doc.setTextColor(...navy);
-    doc.setFontSize(16);doc.setFont('helvetica','bold');
-    const titleLines=doc.splitTextToSize(p.title,W-28);
-    doc.text(titleLines,14,curY);
-    curY+=titleLines.length*7+3;
-
-    // Location
-    doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(...textS);
-    doc.text('📍 '+p.location,14,curY,{maxWidth:W-28});
-    curY+=7;
-
-    // Details boxes
-    const details=[];
-    if(p.area)details.push({k:'Area',v:p.area+' '+(p.areaUnit||'')});
-    details.push({k:'Type',v:typeLabel[p.type]||p.type});
-    if(p.status)details.push({k:'Status',v:stLabel[p.status]||p.status});
-    if(details.length>0){
-      const boxW=(W-28)/details.length-2;
-      details.forEach((d,i)=>{
-        const bx=14+i*(boxW+2);
-        doc.setFillColor(...cream);
-        doc.roundedRect(bx,curY,boxW,16,2,2,'F');
-        doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...textH);
-        doc.text(d.k.toUpperCase(),bx+boxW/2,curY+6,{align:'center'});
-        doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
-        doc.text(d.v,bx+boxW/2,curY+13,{align:'center'});
-      });
-      curY+=22;
-    }
-
-    // Description
-    if(p.desc||p.description){
-      doc.setDrawColor(...cream);doc.setLineWidth(0.3);
-      doc.line(14,curY,W-14,curY);curY+=5;
-      doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
-      doc.text('About this Property',14,curY);curY+=5;
-      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...textS);
-      const descLines=doc.splitTextToSize(p.desc||p.description,W-28);
-      doc.text(descLines.slice(0,4),14,curY);
-      curY+=Math.min(descLines.length,4)*5+4;
-    }
-
-    // Extra photos grid
-    const extraPhotos=photos.slice(1,4);
-    if(extraPhotos.length>0&&curY<H-70){
-      doc.setDrawColor(...cream);doc.line(14,curY,W-14,curY);curY+=5;
-      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...navy);
-      doc.text('More Photos',14,curY);curY+=5;
-      const pw=(W-28-(extraPhotos.length-1)*4)/extraPhotos.length;
-      for(let i=0;i<extraPhotos.length;i++){
-        try{
-          const imgD=await urlToBase64(extraPhotos[i].url||extraPhotos[i].data);
-          doc.addImage(imgD,'JPEG',14+i*(pw+4),curY,pw,pw*0.65,undefined,'FAST');
-        }catch(e){}
-      }
-    }
-
-    // ===== AGENT FOOTER =====
-    loadAgentProfile();
-    const a=getAgentProfile();
-    const footerY=H-40;
-    doc.setFillColor(...navy);doc.rect(0,footerY,W,40,'F');
-    doc.setFillColor(...gold);doc.rect(0,footerY,W,1.5,'F');
-    if(a.name){
-      doc.setTextColor(...white);
-      doc.setFontSize(13);doc.setFont('helvetica','bold');
-      doc.text(a.name,14,footerY+12);
-      if(a.company){doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(...gold);doc.text(a.company,14,footerY+19);}
-      doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(200,205,230);
-      doc.text('📞 '+a.phone,14,footerY+(a.company?27:22));
-      if(a.wa&&a.wa!==a.phone)doc.text('💬 '+a.wa,14,footerY+(a.company?33:29));
-    }
-    doc.setTextColor(...gold);doc.setFontSize(13);doc.setFont('helvetica','bold');
-    doc.text('PropBook',W-14,footerY+14,{align:'right'});
-    doc.setTextColor(150,155,200);doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text('Professional Property Manager',W-14,footerY+21,{align:'right'});
-    doc.text('diamondcattoon-cmd.github.io/propbook',W-14,footerY+28,{align:'right'});
-
-    const fname=(p.title||'Property').replace(/[^a-zA-Z0-9]/g,'_').slice(0,25);
-    if(shareViaWhatsApp){
-      // Download PDF then open WhatsApp
-      doc.save(`PropBook_${fname}.pdf`);
-      setTimeout(()=>{
-        window.open('https://wa.me/?text='+encodeURIComponent(`📄 *PropBook Property Brochure*\n\n🏡 ${p.title}\n📍 ${p.location}\n💰 ${fmtPrice(p.price,p.priceUnit)}\n\n${a.name?`📞 ${a.name}: ${a.phone}`:''}\n\nPDF brochure attached ☝️`));
-      },500);
-      showToast('✅ PDF downloaded! Now share via WhatsApp.');
-    }else{
-      doc.save(`PropBook_${fname}.pdf`);
-      showToast('✅ PDF downloaded!');
-    }
-  }catch(err){
-    console.error('PDF error',err);
-    showToast('❌ PDF error: '+err.message);
+  if(shareViaWhatsApp){
+    showToast('📄 PDF window opened! Print → Save as PDF → share via WhatsApp');
+    setTimeout(()=>{
+      window.open('https://wa.me/?text='+encodeURIComponent(`📄 *Property Brochure*\n\n🏡 ${p.title}\n📍 ${p.location}\n💰 ₹${p.price} ${p.priceUnit||''}\n\n${a.name?`👤 ${a.name}`:''}\n${a.phone?`📞 ${a.phone}`:''}\n\n_Shared via PropBook 🏡_`));
+    },1000);
+  }else{
+    setTimeout(()=>w.print(),800);
   }
 }
 
@@ -2150,4 +2098,21 @@ async function init(){
   try{
     const {data:{session},error}=await sbClient.auth.getSession();
     clearTimeout(loadingTimeout);
-    if(error) throw err
+    if(error) throw error;
+    if(session){
+      currentUser=session.user;
+      try{ properties=await dbGetAll(); }catch(e){ properties=[]; }
+      launchApp();
+    }else{
+      showLoginScreen();
+    }
+  }catch(e){
+    clearTimeout(loadingTimeout);
+    console.error('Init error',e);
+    showLoginScreen();
+  }
+}
+init();
+</script>
+</body>
+</html>
