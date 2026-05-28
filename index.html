@@ -1964,38 +1964,24 @@ async function triggerInstall() {
     const { outcome } = await _installPrompt.userChoice;
     if (outcome === 'accepted') {
       _installPrompt = null;
-      document.getElementById('install-btn').classList.remove('show');
+      const btn = document.getElementById('install-btn');
+      if(btn) btn.classList.remove('show');
     }
   } else {
-    showInstallInstructions();
+    showToast('📱 Browser menu (⋮) → "Add to Home Screen"', 4000);
   }
 }
 
 function showInstallInstructions() {
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isAndroid = /android/i.test(navigator.userAgent);
-  if (isIOS) {
-    document.getElementById('ios-banner').classList.add('show');
-  } else if (isAndroid) {
-    alert('📱 PropBook Install Karo:\n\nChrome browser mein:\n1. Upar right corner mein ⋮ (3 dots) dabao\n2. "Add to Home Screen" select karo\n3. "Add" dabao\n\n✅ PropBook app ki tarah install ho jaayega!');
-  } else {
-    alert('💻 Desktop par Install:\n\nChrome browser mein:\n1. Address bar ke right mein 💾 icon click karo\n2. "Install PropBook" click karo');
-  }
+  // Don't show alert - just open browser menu hint via toast
+  showToast('📱 Browser menu (⋮) → "Add to Home Screen"', 4000);
 }
 
 function checkAndShowInstall() {
-  // Always show install button on mobile if not standalone
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (!isStandalone && isMobile) {
+  if (!isStandalone) {
     const btn = document.getElementById('install-btn');
     if (btn) btn.classList.add('show');
-    if (isIOS && !localStorage.getItem('pb_ios_dismissed')) {
-      setTimeout(() => {
-        document.getElementById('ios-banner').classList.add('show');
-      }, 3000);
-    }
   }
 }
 
@@ -2017,52 +2003,14 @@ function checkIOSInstall() {
 
 // Register inline service worker for PWA
 function registerSW() {
-  if ('serviceWorker' in navigator) {
-    const swCode = `
-const CACHE = 'propbook-v1';
-const URLS = ['/propbook/'];
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
-  self.clients.claim();
-});
-self.addEventListener('fetch', e => {
-  if(e.request.method !== 'GET') return;
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-});`;
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl, { scope: '/propbook/' })
-      .then(() => console.log('SW registered'))
-      .catch(e => console.log('SW error', e));
-  }
+  // Service Worker disabled - no sw.js file available
+  // PWA install still works via manifest.json
 }
 
-// Inject manifest dynamically
 function injectManifest() {
-  const manifest = {
-    name: 'PropBook',
-    short_name: 'PropBook',
-    description: 'Professional Property Manager for Real Estate Agents',
-    start_url: '/propbook/',
-    display: 'standalone',
-    background_color: '#12153D',
-    theme_color: '#12153D',
-    orientation: 'portrait',
-    icons: [
-      { src: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3e1.png', sizes: '72x72', type: 'image/png' },
-      { src: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3e1.png', sizes: '192x192', type: 'image/png' },
-      { src: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3e1.png', sizes: '512x512', type: 'image/png' }
-    ]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.querySelector('link[rel="manifest"]');
-  if (link) link.href = url;
+  // manifest.json is already linked in HTML head - no action needed
 }
+
 
 // ===== INIT =====
 async function init(){
