@@ -9,14 +9,9 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/C9922A/ffffff?text=PB",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%2312153D'/><text x='96' y='130' font-size='100' text-anchor='middle' fill='%23C9922A' font-family='serif' font-weight='bold'>P</text></svg>",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://via.placeholder.com/512x512/C9922A/ffffff?text=PB",
-      "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml"
     }
   ]
 }
