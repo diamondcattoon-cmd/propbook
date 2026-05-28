@@ -1,0 +1,22 @@
+{
+  "name": "PropBook",
+  "short_name": "PropBook",
+  "description": "Property Manager for Real Estate Agents",
+  "start_url": "/propbook/",
+  "display": "standalone",
+  "background_color": "#12153D",
+  "theme_color": "#12153D",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/C9922A/ffffff?text=PB",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/C9922A/ffffff?text=PB",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
