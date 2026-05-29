@@ -77,9 +77,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:va
 .prop-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;transition:box-shadow .15s;border:1.5px solid var(--cream2)}
 .prop-card:active{box-shadow:0 1px 8px rgba(18,21,61,.06)}
 .prop-card-inner{display:flex;align-items:stretch;min-height:140px}
-.card-img{width:130px;min-width:130px;height:auto;min-height:140px;position:relative;overflow:hidden;background:var(--cream2);flex-shrink:0}
+.card-img{width:130px;min-width:130px;height:140px;max-height:140px;position:relative;overflow:hidden;background:var(--cream2);flex-shrink:0}
 .card-img img,.card-img video{width:100%;height:100%;object-fit:cover}
-.card-img-placeholder{width:100%;height:100%;min-height:140px;display:flex;align-items:center;justify-content:center;font-size:44px}
+.card-img-placeholder{width:100%;height:140px;display:flex;align-items:center;justify-content:center;font-size:44px}
 .card-divider{width:1.5px;background:var(--cream2);flex-shrink:0}
 .card-body{flex:1;padding:12px 13px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
 .card-top{}
@@ -795,7 +795,7 @@ function initSupabase() {
   return false;
 }
 
-const ALL_SCREENS=['screen-config','screen-login','screen-loading','screen-pin','screen-pin-setup'];
+const ALL_SCREENS=['screen-config','screen-login','screen-loading'];
 function hideAllScreens(){
   ALL_SCREENS.forEach(s=>{const el=document.getElementById(s);if(el)el.classList.add('hidden');});
   document.getElementById('main-app').style.display='none';
@@ -838,8 +838,12 @@ function launchApp(){
   applyI18n();
   renderDashboard();
   checkAndShowInstall();
-  if(!isPINSet()){showPINSetup();}
-  else{showPINEntry();}
+  // If agent profile not set, show profile screen first
+  if(!agentProfile.name){
+    showConfigScreen();
+  }else{
+    showMainApp();
+  }
 }
 
 async function useDemoMode() {
@@ -859,30 +863,23 @@ async function useDemoMode() {
 }
 
 function saveConfig() {
-  const url = (document.getElementById('cfg-url').value.trim()) || _SB_URL;
-  const key = (document.getElementById('cfg-key').value.trim()) || _SB_KEY;
-  // Agent profile
   const agentName = document.getElementById('cfg-agent-name').value.trim();
   const agentPhone = document.getElementById('cfg-agent-phone').value.trim();
   if (!agentName || !agentPhone) { alert('Please enter your Name and Phone number'); return; }
   const agentWA = document.getElementById('cfg-agent-wa').value.trim();
   const agentCompany = document.getElementById('cfg-agent-company').value.trim();
-  // Cloudinary
   const cldName = document.getElementById('cfg-cld-name').value.trim();
   const cldPreset = document.getElementById('cfg-cld-preset').value.trim();
-  // Save all
-  localStorage.setItem('pb_sb_url', url);
-  localStorage.setItem('pb_sb_key', key);
   localStorage.setItem('pb_agent', JSON.stringify({ name: agentName, phone: agentPhone, wa: agentWA || agentPhone, company: agentCompany }));
   if (cldName && cldPreset) {
     localStorage.setItem('pb_cld', JSON.stringify({ cloudName: cldName, preset: cldPreset }));
   }
-  SUPABASE_URL = url; SUPABASE_KEY = key;
   loadAgentProfile();
-  if (initSupabase()) {
-    showLoginScreen();
+  // If already logged in, go to app directly
+  if (currentUser) {
+    showMainApp();
   } else {
-    alert('Could not connect. Please check your keys.');
+    showLoginScreen();
   }
 }
 
@@ -2070,13 +2067,7 @@ async function init(){
   registerSW();
   if(!initSupabase()){
     SUPABASE_URL=_SB_URL; SUPABASE_KEY=_SB_KEY;
-    if(!initSupabase()){showConfigScreen();return;}
-  }
-  // Check if agent profile exists — if not, show config first
-  loadAgentProfile();
-  if(!agentProfile.name){
-    showConfigScreen();
-    return;
+    if(!initSupabase()){showLoginScreen();return;}
   }
   showLoadingScreen();
 
